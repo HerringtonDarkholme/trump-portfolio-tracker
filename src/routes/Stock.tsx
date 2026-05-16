@@ -47,7 +47,9 @@ export default function Stock() {
       <nav className="text-xs text-muted">
         <Link to="/" className="hover:text-white">Home</Link>
         <span className="mx-1.5">/</span>
-        <span>{stock.sector}</span>
+        <Link to={`/sector/${encodeURIComponent(stock.sector)}`} className="hover:text-accent">
+          {stock.sector}
+        </Link>
         <span className="mx-1.5">/</span>
         <span className="text-white font-mono">{stock.ticker}</span>
       </nav>

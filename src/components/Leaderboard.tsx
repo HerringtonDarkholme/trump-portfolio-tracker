@@ -94,7 +94,14 @@ export default function Leaderboard() {
                   </Link>
                 </td>
                 <td className="px-3 py-2 truncate max-w-[260px]" title={s.name}>{s.name}</td>
-                <td className="px-3 py-2 text-muted">{s.sector}</td>
+                <td className="px-3 py-2">
+                  <Link
+                    to={`/sector/${encodeURIComponent(s.sector)}`}
+                    className="text-muted hover:text-accent hover:underline"
+                  >
+                    {s.sector}
+                  </Link>
+                </td>
                 <td className="px-3 py-2 text-right text-buy">{fmt$(s.totalBuy)}</td>
                 <td className="px-3 py-2 text-right text-sell">{fmt$(s.totalSell)}</td>
                 <td className={"px-3 py-2 text-right font-medium " + (s.net >= 0 ? "text-buy" : "text-sell")}>

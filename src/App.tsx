@@ -1,24 +1,30 @@
 import { Routes, Route, Link } from "react-router-dom";
 import Home from "./routes/Home";
 import Stock from "./routes/Stock";
+import Sector from "./routes/Sector";
+import SiteSearch from "./components/SiteSearch";
 
 export default function App() {
   return (
     <div className="min-h-screen">
-      <header className="border-b border-border bg-panel/70 backdrop-blur sticky top-0 z-10">
-        <div className="max-w-[1400px] mx-auto px-6 py-4 flex items-baseline justify-between">
-          <Link to="/" className="text-lg font-semibold tracking-tight hover:text-accent">
+      <header className="border-b border-border bg-panel/70 backdrop-blur sticky top-0 z-20">
+        <div className="max-w-[1400px] mx-auto px-6 py-3 flex items-center justify-between gap-4">
+          <Link to="/" className="text-lg font-semibold tracking-tight hover:text-accent whitespace-nowrap">
             Trump Portfolio Dashboard
           </Link>
-          <span className="text-xs text-muted">
-            2026 periodic transaction reports · midpoint estimates from disclosed ranges
-          </span>
+          <div className="flex items-center gap-4">
+            <SiteSearch />
+            <span className="hidden lg:inline text-xs text-muted">
+              2026 PTR · midpoint estimates
+            </span>
+          </div>
         </div>
       </header>
       <main className="max-w-[1400px] mx-auto px-6 py-6">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/stock/:ticker" element={<Stock />} />
+          <Route path="/sector/:sector" element={<Sector />} />
         </Routes>
       </main>
     </div>

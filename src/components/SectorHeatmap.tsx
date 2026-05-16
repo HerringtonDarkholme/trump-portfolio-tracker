@@ -13,9 +13,10 @@ type Branch = { kind: "branch"; sector: string; children: Node[] };
 type Root = { kind: "root"; children: Branch[] };
 type Node = Root | Branch | Leaf;
 
-function buildHierarchy(minVolume: number): Root {
+function buildHierarchy(minVolume: number, sectorFilter?: string): Root {
   const bySector: Record<string, Stock[]> = {};
   for (const s of Object.values(dataset.stocks)) {
+    if (sectorFilter && s.sector !== sectorFilter) continue;
     const vol = s.totalBuy + s.totalSell;
     if (vol < minVolume) continue;
     (bySector[s.sector] ??= []).push(s);
@@ -44,13 +45,13 @@ type Tooltip = { x: number; y: number; stock: Stock } | null;
 const SLIDER_MAX = 100;
 const sliderToVolume = (n: number) => Math.round(Math.pow(n / SLIDER_MAX, 2.4) * 5_000_000);
 
-export default function SectorHeatmap() {
-  const [sliderPos, setSliderPos] = useState(28); // ~$50k starting point
+export default function SectorHeatmap({ sectorFilter, height = 620 }: { sectorFilter?: string; height?: number }) {
+  const [sliderPos, setSliderPos] = useState(sectorFilter ? 0 : 28);
   const minVolume = sliderToVolume(sliderPos);
   const [tip, setTip] = useState<Tooltip>(null);
   const navigate = useNavigate();
 
-  const root = useMemo(() => buildHierarchy(minVolume), [minVolume]);
+  const root = useMemo(() => buildHierarchy(minVolume, sectorFilter), [minVolume, sectorFilter]);
 
   const visibleSectors = root.children.length;
   const visibleStocks = root.children.reduce((sum, b) => sum + b.children.length, 0);
@@ -86,16 +87,17 @@ export default function SectorHeatmap() {
         </div>
       </div>
 
-      <div className="relative" style={{ height: 620 }}>
+      <div className="relative" style={{ height }}>
         <ParentSize>
-          {({ width, height }) =>
+          {({ width, height: hh }) =>
             width < 50 ? null : (
               <HeatmapSvg
                 width={width}
-                height={height}
+                height={hh}
                 root={root}
                 onHover={setTip}
                 onClick={(s) => navigate(`/stock/${encodeURIComponent(s.ticker)}`)}
+                onSectorClick={(sec) => navigate(`/sector/${encodeURIComponent(sec)}`)}
               />
             )
           }
@@ -144,12 +146,14 @@ function HeatmapSvg({
   root,
   onHover,
   onClick,
+  onSectorClick,
 }: {
   width: number;
   height: number;
   root: Root;
   onHover: (t: Tooltip) => void;
   onClick: (s: Stock) => void;
+  onSectorClick: (sector: string) => void;
 }) {
   const hier = useMemo(
     () =>
@@ -196,7 +200,8 @@ function HeatmapSvg({
                         fontSize={11}
                         fontWeight={700}
                         fill="#cbd5e1"
-                        style={{ pointerEvents: "none", letterSpacing: "0.04em" }}
+                        style={{ cursor: "pointer", letterSpacing: "0.04em" }}
+                        onClick={() => onSectorClick(data.sector)}
                       >
                         {data.sector.toUpperCase()}
                       </text>
