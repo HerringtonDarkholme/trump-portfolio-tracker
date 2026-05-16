@@ -3,6 +3,7 @@ import Home from "./routes/Home";
 import Stock from "./routes/Stock";
 import Sector from "./routes/Sector";
 import Day from "./routes/Day";
+import Sitemap from "./routes/Sitemap";
 import SiteSearch from "./components/SiteSearch";
 
 export default function App() {
@@ -27,11 +28,13 @@ export default function App() {
           <Route path="/stock/:ticker" element={<Stock />} />
           <Route path="/sector/:sector" element={<Sector />} />
           <Route path="/day/:date" element={<Day />} />
+          <Route path="/sitemap" element={<Sitemap />} />
         </Routes>
       </main>
       <footer className="border-t border-border mt-8">
-        <div className="max-w-[1400px] mx-auto px-6 py-4 text-[11px] text-muted">
-          Based on public OGE filings. Recreational project, not financial advice.
+        <div className="max-w-[1400px] mx-auto px-6 py-4 text-[11px] text-muted flex items-center justify-between gap-3 flex-wrap">
+          <span>Based on public OGE filings. Recreational project, not financial advice.</span>
+          <Link to="/sitemap" className="hover:text-accent">Sitemap</Link>
         </div>
       </footer>
     </div>

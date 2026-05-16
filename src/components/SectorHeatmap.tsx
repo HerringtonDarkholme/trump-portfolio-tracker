@@ -61,7 +61,7 @@ function buildHierarchy(minVolume: number, sectorFilter?: string, dayFilter?: st
   };
 }
 
-type Tooltip = { x: number; y: number; stock: Stock } | null;
+type Tooltip = { x: number; y: number; stock: Stock; containerW?: number; containerH?: number } | null;
 
 // Power scale for the min-volume slider: more granularity at low end where most stocks live.
 const SLIDER_MAX = 100;
@@ -128,7 +128,7 @@ export default function SectorHeatmap({
                 width={width}
                 height={hh}
                 root={root}
-                onHover={setTip}
+                onHover={(t) => setTip(t ? { ...t, containerW: width, containerH: hh } : null)}
                 onClick={(s) => navigate(`/stock/${encodeURIComponent(s.ticker)}`)}
                 onSectorClick={(sec) => navigate(`/sector/${encodeURIComponent(sec)}`)}
               />
@@ -136,14 +136,21 @@ export default function SectorHeatmap({
           }
         </ParentSize>
 
-        {tip && (
+        {tip && (() => {
+          const TT_W = 240, TT_H = 130, PAD = 12;
+          const w = tip.containerW ?? 1000;
+          const h = tip.containerH ?? 600;
+          const flipX = tip.x + PAD + TT_W > w;
+          const flipY = tip.y + PAD + TT_H > h;
+          const left = flipX ? Math.max(8, tip.x - PAD - TT_W) : tip.x + PAD;
+          const top  = flipY ? Math.max(8, tip.y - PAD - TT_H) : tip.y + PAD;
+          return (
           <div
             className="pointer-events-none absolute bg-panel2 border border-border rounded-md px-3 py-2 text-xs shadow-xl"
             style={{
-              left: Math.min(tip.x + 12, 1000),
-              top: tip.y + 12,
+              left, top,
               zIndex: 20,
-              maxWidth: 260,
+              width: TT_W,
             }}
           >
             <div className="font-semibold text-white">
@@ -167,7 +174,8 @@ export default function SectorHeatmap({
             </div>
             <div className="text-muted mt-1 text-[10px]">Click to view all transactions</div>
           </div>
-        )}
+          );
+        })()}
       </div>
     </section>
   );
@@ -253,20 +261,18 @@ function HeatmapSvg({
                       key={`l-${s.ticker}`}
                       transform={`translate(${n.x0},${n.y0})`}
                       style={{ cursor: "pointer" }}
-                      onMouseEnter={(e) =>
-                        onHover({
-                          x: e.nativeEvent.offsetX + n.x0,
-                          y: e.nativeEvent.offsetY + n.y0,
-                          stock: s,
-                        })
-                      }
-                      onMouseMove={(e) =>
-                        onHover({
-                          x: e.nativeEvent.offsetX + n.x0,
-                          y: e.nativeEvent.offsetY + n.y0,
-                          stock: s,
-                        })
-                      }
+                      onMouseEnter={(e) => {
+                        const svg = e.currentTarget.ownerSVGElement;
+                        if (!svg) return;
+                        const r = svg.getBoundingClientRect();
+                        onHover({ x: e.clientX - r.left, y: e.clientY - r.top, stock: s });
+                      }}
+                      onMouseMove={(e) => {
+                        const svg = e.currentTarget.ownerSVGElement;
+                        if (!svg) return;
+                        const r = svg.getBoundingClientRect();
+                        onHover({ x: e.clientX - r.left, y: e.clientY - r.top, stock: s });
+                      }}
                       onMouseLeave={() => onHover(null)}
                       onClick={() => onClick(s)}
                     >

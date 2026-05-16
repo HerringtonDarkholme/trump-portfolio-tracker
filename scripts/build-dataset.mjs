@@ -222,6 +222,40 @@ const out = {
 fs.mkdirSync(OUT_DIR, { recursive: true });
 fs.writeFileSync(OUT_PATH, JSON.stringify(out));
 
+// --- Emit XML sitemap for search engines ---------------------------------
+const SITE_URL = process.env.SITE_URL || "https://trump-portfolio.vercel.app";
+const today = new Date().toISOString().slice(0, 10);
+const uniqueDays = new Set();
+for (const s of Object.values(stocks)) for (const t of s.transactions) uniqueDays.add(t.date);
+
+const urls = [
+  { loc: "/", priority: "1.0", changefreq: "weekly" },
+  { loc: "/sitemap", priority: "0.3", changefreq: "monthly" },
+  ...Object.keys(sectors).map((sec) => ({
+    loc: `/sector/${encodeURIComponent(sec)}`, priority: "0.7", changefreq: "weekly",
+  })),
+  ...Object.keys(stocks).map((t) => ({
+    loc: `/stock/${encodeURIComponent(t)}`, priority: "0.6", changefreq: "weekly",
+  })),
+  ...[...uniqueDays].sort().map((d) => ({
+    loc: `/day/${d}`, priority: "0.4", changefreq: "monthly",
+  })),
+];
+
+const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+  '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+  urls.map(({ loc, priority, changefreq }) =>
+    `  <url>\n    <loc>${SITE_URL}${loc}</loc>\n    <lastmod>${today}</lastmod>\n    <changefreq>${changefreq}</changefreq>\n    <priority>${priority}</priority>\n  </url>`
+  ).join("\n") + "\n</urlset>\n";
+
+const PUBLIC_DIR = path.join(ROOT, "public");
+fs.mkdirSync(PUBLIC_DIR, { recursive: true });
+fs.writeFileSync(path.join(PUBLIC_DIR, "sitemap.xml"), xml);
+fs.writeFileSync(path.join(PUBLIC_DIR, "robots.txt"),
+  `User-agent: *\nAllow: /\nSitemap: ${SITE_URL}/sitemap.xml\n`);
+console.log(`  sitemap.xml:   ${urls.length} URLs → public/sitemap.xml`);
+console.log(`  robots.txt:    public/robots.txt`);
+
 // --- Report -----------------------------------------------------------------
 const resolved = Object.values(stocks).filter((s) => !s.ticker.startsWith("UNKN-")).length;
 console.log(`✓ Built ${OUT_PATH}`);

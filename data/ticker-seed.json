@@ -1026,5 +1026,6 @@
   "WLY": { "name": "John Wiley & Sons", "sector": "Communication Services", "aliases": ["WILEY JOHN & SONS INC", "JOHN WILEY & SONS INC"] },
   "HFWA": { "name": "Heritage Financial", "sector": "Financials", "aliases": ["HERITAGE FINL CORP WASH"] },
   "IUGXX": { "name": "Invesco Premier U.S. Govt Money Market", "sector": "Money Market", "aliases": ["INVESCO PREMIER U.S. GOVERNMENT MONEY MARKET PORTFOLIO INVESTOR CLASS 5 - FRAC.0000", "INVESCO PREMIER US GOVERNMENT MONEY MARKET PORTFOLIO"] },
-  "CARS": { "name": "Cars.com", "sector": "Communication Services", "aliases": ["CARS INC", "CARS.COM INC"] }
+  "CARS": { "name": "Cars.com", "sector": "Communication Services", "aliases": ["CARS INC", "CARS.COM INC"] },
+  "IWM": { "name": "iShares Russell 2000 ETF", "sector": "ETF \u2014 Broad", "aliases": ["ISHARES TR RUSSELL 2000 ETF", "ISHARES RUSSELL 2000 ETF"] }
 }
