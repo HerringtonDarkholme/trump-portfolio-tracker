@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { dataset } from "../lib/dataset";
+import CompanyLogo from "./CompanyLogo";
 
 type Hit =
   | { kind: "stock"; ticker: string; name: string; sector: string; score: number }
@@ -122,7 +123,19 @@ export default function SiteSearch() {
           placeholder="Search ticker, name…"
           className="w-full bg-panel2 border border-border rounded-md pl-8 pr-8 sm:pr-9 py-1.5 text-sm text-ink placeholder-muted focus:outline-none focus:border-accent"
         />
-        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none">⌕</span>
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted pointer-events-none"
+        >
+          <circle cx="11" cy="11" r="7" />
+          <path d="m20 20-3.5-3.5" />
+        </svg>
         <kbd className="hidden sm:inline absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
       </div>
 
@@ -147,6 +160,11 @@ export default function SiteSearch() {
                     <li key={`${h.kind}-${i}`} onMouseEnter={() => setFocusIdx(i)} onClick={() => go(h)} className={cls}>
                       {h.kind === "stock" ? (
                         <>
+                          <CompanyLogo
+                            ticker={h.ticker}
+                            alt=""
+                            className="w-7 h-7 object-contain bg-bg rounded-sm border border-border p-0.5 shrink-0"
+                          />
                           <div className="min-w-0 flex-1">
                             <div className="font-mono text-accent text-sm">{h.ticker}</div>
                             <div className="text-xs text-muted truncate">{h.name}</div>

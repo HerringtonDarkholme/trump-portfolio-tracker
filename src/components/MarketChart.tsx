@@ -13,9 +13,9 @@ import type { Transaction } from "../types";
 import { fmt$ } from "../lib/format";
 import CompanyLogo from "./CompanyLogo";
 
-// Pinned window: mid-Dec 2025 → mid-Apr 2026 covers the active filing period
-// with about two weeks of context on each side.
-const VISIBLE_FROM = "2025-12-15" as Time;
+// Pinned window: Dec 22 2025 → Apr 15 2026 active filing period plus
+// ~5 trade-day buffer on each side.
+const VISIBLE_FROM = "2025-12-22" as Time;
 const VISIBLE_TO = "2026-04-15" as Time;
 
 type Badge = {
@@ -27,6 +27,10 @@ type Badge = {
   sells: number;
   buyVol: number;
   sellVol: number;
+  // Final gap from the candle's anchor to the badge edge, after collision
+  // avoidance. Defaults to 22 when no collision is detected.
+  buyGap: number;
+  sellGap: number;
 };
 
 // Three shade tiers + a gold halo for the very largest trades:
@@ -42,6 +46,13 @@ const BUY_DARK = "#1f5d1f";
 const SELL_LIGHT = "#b85050";
 const SELL_MID = "#a52a2a"; // brand
 const SELL_DARK = "#7a1818";
+// Turnaround = a single day with both buy and sell activity. Rendered as a
+// single yellow "T" badge instead of splitting into a B and an S. Yellow
+// comes from buy-green + sell-red additive mixing; tones pulled toward
+// mustard / dark amber so they sit calmly on the cream background.
+const TURN_LIGHT = "#d6ac35";
+const TURN_MID = "#ad880f";
+const TURN_DARK = "#7c5d10";
 const BASE_SHADOW = "0 1px 2px rgba(0,0,0,0.2)";
 const TIERS: Tier[] = [
   { upTo: 1e5,      kind: "light",     label: "< $100K" },
@@ -52,6 +63,21 @@ const TIERS: Tier[] = [
 function tierFor(vol: number): Tier {
   for (const t of TIERS) if (vol < t.upTo) return t;
   return TIERS[TIERS.length - 1];
+}
+
+// Detect a turnaround day (both buys and sells present) and pick the
+// dominant direction. Direction follows the larger side by volume; ties
+// resolve to buy.
+function turnaroundFor(b: {
+  buys: number;
+  sells: number;
+  buyVol: number;
+  sellVol: number;
+}): { dir: "buy" | "sell"; netVol: number } | null {
+  if (b.buys === 0 || b.sells === 0) return null;
+  const netVol = Math.abs(b.buyVol - b.sellVol);
+  const dir: "buy" | "sell" = b.buyVol >= b.sellVol ? "buy" : "sell";
+  return { dir, netVol };
 }
 
 type BadgeStyle = {
@@ -67,13 +93,16 @@ type BadgeStyle = {
   className?: string;
 };
 
-function styleFor(type: "buy" | "sell", tier: Tier): BadgeStyle {
-  const light = type === "buy" ? BUY_LIGHT : SELL_LIGHT;
-  const mid = type === "buy" ? BUY_MID : SELL_MID;
-  const dark = type === "buy" ? BUY_DARK : SELL_DARK;
-  const dot = type === "buy"
-    ? "rgba(58,122,58,0.55)"
-    : "rgba(165,42,42,0.55)";
+function styleFor(type: "buy" | "sell" | "turn", tier: Tier): BadgeStyle {
+  const light = type === "buy" ? BUY_LIGHT : type === "sell" ? SELL_LIGHT : TURN_LIGHT;
+  const mid = type === "buy" ? BUY_MID : type === "sell" ? SELL_MID : TURN_MID;
+  const dark = type === "buy" ? BUY_DARK : type === "sell" ? SELL_DARK : TURN_DARK;
+  const dot =
+    type === "buy"
+      ? "rgba(58,122,58,0.55)"
+      : type === "sell"
+        ? "rgba(165,42,42,0.55)"
+        : "rgba(173,136,15,0.7)";
   const fill = tier.kind === "light" ? light : tier.kind === "mid" ? mid : dark;
   // Dark tier gets a thin gold ring; halo tier adds a soft outer halo on top
   // plus a breathing animation (driven by .badge-halo-pulse in index.css).
@@ -215,6 +244,8 @@ export default function MarketChart({
           date, x, yBuy, ySell,
           buys: e.buys, sells: e.sells,
           buyVol: e.buyVol, sellVol: e.sellVol,
+          buyGap: 22,
+          sellGap: 22,
         });
       }
       // Chart sometimes returns null coordinates while it's still laying out
@@ -223,9 +254,95 @@ export default function MarketChart({
         requestAnimationFrame(() => computeBadges(retries + 1));
         return;
       }
+
+      // ---- Phase 2: collision-aware gap assignment ---------------------
+      // Resolve overlaps between badges (and between badges and any candle
+      // body/wick) by pushing colliding badges further from their candle.
+      // Approximate badge bounding box used for hit-testing — generous enough
+      // to include the halo and the ×N subscript on the widest tier.
+      const BADGE_W = 28;
+      const BADGE_H = 22;
+      const STEP = 6;
+      const MIN_GAP = 22;
+      const MAX_GAP = 120;
+
+      // Build pixel rects for every candle in the visible series so badges
+      // can avoid sitting on top of adjacent bars.
+      const candleRects: { x: number; yTop: number; yBottom: number }[] = [];
+      for (const c of candleLookup.values()) {
+        const cx = chart.timeScale().timeToCoordinate(c.time as Time);
+        const cyTop = series.priceToCoordinate(c.high);
+        const cyBottom = series.priceToCoordinate(c.low);
+        if (cx == null || cyTop == null || cyBottom == null) continue;
+        candleRects.push({ x: cx, yTop: cyTop, yBottom: cyBottom });
+      }
+
+      function findGap(
+        x: number,
+        anchorY: number,
+        isBuy: boolean,
+        placed: { x: number; yTop: number; yBottom: number }[]
+      ): number {
+        let gap = MIN_GAP;
+        while (gap <= MAX_GAP) {
+          const yTop = isBuy ? anchorY + gap : anchorY - gap - BADGE_H;
+          const yBottom = yTop + BADGE_H;
+          const xL = x - BADGE_W / 2;
+          const xR = x + BADGE_W / 2;
+
+          let collides = false;
+          // Badge↔badge overlap on the same side (buy vs sell are independent).
+          for (const p of placed) {
+            const pxL = p.x - BADGE_W / 2;
+            const pxR = p.x + BADGE_W / 2;
+            if (xL < pxR && xR > pxL && yTop < p.yBottom && yBottom > p.yTop) {
+              collides = true;
+              break;
+            }
+          }
+          // Badge↔candle overlap. Skip the badge's own candle (same x),
+          // since by construction the badge sits below/above it.
+          if (!collides) {
+            for (const c of candleRects) {
+              const dx = Math.abs(c.x - x);
+              if (dx < 1 || dx >= BADGE_W / 2 + 2) continue;
+              if (yTop < c.yBottom && yBottom > c.yTop) {
+                collides = true;
+                break;
+              }
+            }
+          }
+          if (!collides) return gap;
+          gap += STEP;
+        }
+        return gap;
+      }
+
+      // Left→right placement order so dense clusters fan outward predictably.
+      out.sort((a, b) => a.x - b.x);
+      const placedBuys: { x: number; yTop: number; yBottom: number }[] = [];
+      const placedSells: { x: number; yTop: number; yBottom: number }[] = [];
+      for (const b of out) {
+        // Turnaround days collapse into one badge on the dominant side, so
+        // the other side is skipped for collision purposes.
+        const turn = turnaroundFor(b);
+        const skipBuy = turn != null && turn.dir !== "buy";
+        const skipSell = turn != null && turn.dir !== "sell";
+        if (!skipBuy && b.buys > 0 && b.yBuy != null) {
+          b.buyGap = findGap(b.x, b.yBuy, true, placedBuys);
+          const yTop = b.yBuy + b.buyGap;
+          placedBuys.push({ x: b.x, yTop, yBottom: yTop + BADGE_H });
+        }
+        if (!skipSell && b.sells > 0 && b.ySell != null) {
+          b.sellGap = findGap(b.x, b.ySell, false, placedSells);
+          const yBottom = b.ySell - b.sellGap;
+          placedSells.push({ x: b.x, yTop: yBottom - BADGE_H, yBottom });
+        }
+      }
+
       // Skip identical updates so we don't thrash React state during resize.
       const sig = out
-        .map((b) => `${b.date}|${b.x}|${b.yBuy}|${b.ySell}|${b.buyVol}|${b.sellVol}`)
+        .map((b) => `${b.date}|${b.x}|${b.yBuy}|${b.ySell}|${b.buyVol}|${b.sellVol}|${b.buyGap}|${b.sellGap}`)
         .join(";");
       if (sig === lastSerialised) return;
       lastSerialised = sig;
@@ -345,16 +462,36 @@ export default function MarketChart({
 
       {/* Buy/Sell badges — HTML overlay computed from chart pixel coordinates. */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden z-10">
-        {badges.map((b) => (
-          <Fragment key={b.date}>
-            {b.buys > 0 && b.yBuy != null && (
-              <TxBadge x={b.x} y={b.yBuy} type="buy" count={b.buys} vol={b.buyVol} />
-            )}
-            {b.sells > 0 && b.ySell != null && (
-              <TxBadge x={b.x} y={b.ySell} type="sell" count={b.sells} vol={b.sellVol} />
-            )}
-          </Fragment>
-        ))}
+        {badges.map((b) => {
+          const turn = turnaroundFor(b);
+          if (turn) {
+            const y = turn.dir === "buy" ? b.yBuy : b.ySell;
+            if (y == null) return null;
+            const gap = turn.dir === "buy" ? b.buyGap : b.sellGap;
+            return (
+              <TxBadge
+                key={b.date}
+                x={b.x}
+                y={y}
+                type="turn"
+                dir={turn.dir}
+                count={b.buys + b.sells}
+                vol={turn.netVol}
+                gap={gap}
+              />
+            );
+          }
+          return (
+            <Fragment key={b.date}>
+              {b.buys > 0 && b.yBuy != null && (
+                <TxBadge x={b.x} y={b.yBuy} type="buy" dir="buy" count={b.buys} vol={b.buyVol} gap={b.buyGap} />
+              )}
+              {b.sells > 0 && b.ySell != null && (
+                <TxBadge x={b.x} y={b.ySell} type="sell" dir="sell" count={b.sells} vol={b.sellVol} gap={b.sellGap} />
+              )}
+            </Fragment>
+          );
+        })}
       </div>
 
       {/* Chart header: logo + ticker + name */}
@@ -373,9 +510,6 @@ export default function MarketChart({
           </div>
         </div>
       </div>
-
-      {/* Info popover */}
-      <ChartInfo />
 
       <div
         ref={tooltipRef}
@@ -423,6 +557,7 @@ export function MarketChartLegend() {
           </span>
         </span>
       ))}
+      <ChartInfo />
     </div>
   );
 }
@@ -430,10 +565,9 @@ export function MarketChartLegend() {
 function TierSwatch({ tier }: { tier: Tier }) {
   const buy = styleFor("buy", tier);
   const sell = styleFor("sell", tier);
-  // Width is ~1.8x the height so each half is wide enough for a readable
-  // letter. Height tracks the tier's per-shape size, so the light tier stays
-  // smaller and rounder than the others.
-  const w = Math.round(buy.size * 1.8);
+  // Legend-only swatch: B and S packed tighter than on-chart markers via a
+  // narrower aspect ratio. Vertical split (left half = buy, right half = sell).
+  const w = Math.round(buy.size * 1.4);
   const h = buy.size;
   return (
     <div
@@ -467,8 +601,8 @@ function TierSwatch({ tier }: { tier: Tier }) {
 function ChartInfo() {
   const [open, setOpen] = useState(false);
   return (
-    <div
-      className="absolute top-3 right-3 z-20"
+    <span
+      className="relative inline-flex items-center"
       onMouseEnter={() => setOpen(true)}
       onMouseLeave={() => setOpen(false)}
       onFocus={() => setOpen(true)}
@@ -477,12 +611,12 @@ function ChartInfo() {
       <button
         type="button"
         aria-label="How to read this chart"
-        className="w-6 h-6 rounded-full border border-border bg-panel text-muted hover:text-ink hover:border-ink flex items-center justify-center text-xs font-serif italic"
+        className="w-5 h-5 rounded-full border border-border bg-panel text-muted hover:text-ink hover:border-ink flex items-center justify-center text-[10px] font-serif italic"
       >
         i
       </button>
       {open && (
-        <div className="absolute top-7 right-0 w-72 bg-panel border border-ink shadow-lg p-3 text-xs leading-relaxed text-ink">
+        <div className="absolute bottom-full right-0 mb-2 w-72 bg-panel border border-ink shadow-lg p-3 text-xs leading-relaxed text-ink normal-case tracking-normal whitespace-normal z-30">
           <div className="font-semibold mb-2 text-sm">How to read this chart</div>
           <ul className="space-y-1.5 text-muted">
             <li>
@@ -490,6 +624,13 @@ function ChartInfo() {
               <span className="text-buy">buy</span>;{" "}
               <span className="font-mono text-sell">S</span> above marks a{" "}
               <span className="text-sell">sell</span>.
+            </li>
+            <li>
+              A yellow{" "}
+              <span className="font-mono" style={{ color: TURN_DARK }}>T</span>{" "}
+              marks a <strong>turnaround</strong> day — both buys and sells
+              happened. Position follows the larger side; size is{" "}
+              <em>net</em> volume (|buy − sell|).
             </li>
             <li>
               The day's aggregated dollar volume is read from the marker
@@ -509,14 +650,15 @@ function ChartInfo() {
               </ul>
             </li>
             <li>
-              A small subscript (e.g. <span className="font-mono">B×3</span>)
-              means multiple transactions happened that day; the value is summed.
+              A small dark pill on the marker's corner (e.g.{" "}
+              <span className="font-mono">2</span>) shows the transaction
+              count for that day; values are summed.
             </li>
             <li>Hover any bar to see OHLC and the day's transactions.</li>
           </ul>
         </div>
       )}
-    </div>
+    </span>
   );
 }
 
@@ -524,20 +666,29 @@ function TxBadge({
   x,
   y,
   type,
+  dir,
   count,
   vol,
+  gap,
 }: {
   x: number;
   y: number;
-  type: "buy" | "sell";
+  type: "buy" | "sell" | "turn";
+  // Position direction: "buy" sits below the candle low, "sell" sits above
+  // the candle high. For "turn" badges this is the dominant side; for
+  // "buy" / "sell" it matches the type.
+  dir: "buy" | "sell";
   count: number;
   vol: number;
+  gap: number;
 }) {
-  const isBuy = type === "buy";
+  const isBuy = dir === "buy";
   const tier = tierFor(vol);
   const s = styleFor(type, tier);
   // Distance from the candle's wick to the edge of the badge.
-  const GAP = 22;
+  // Defaults to 22 but can be increased by the collision-resolver to keep
+  // adjacent badges and bars from overlapping.
+  const GAP = gap;
   const TAIL = 4;
   // No tail → dotted line extends right up to the badge edge (with a 1px
   // breathing gap). With tail → leave TAIL px clear for the triangle.
@@ -584,30 +735,57 @@ function TxBadge({
       <div style={connector} />
       <div style={badgeWrap}>
         <div
-          className={
-            "font-mono font-bold tracking-tight flex items-center justify-center " +
-            (s.className ?? "")
+          style={{ position: "relative", width: s.size, height: s.size }}
+          title={
+            type === "turn"
+              ? `Turnaround · ${count} transactions · net ${tier.label}`
+              : `${count} ${isBuy ? "buy" : "sell"}${count > 1 ? "s" : ""} · ${tier.label}`
           }
-          style={{
-            background: s.background,
-            color: s.color,
-            width: count > 1 ? "auto" : s.size,
-            height: s.size,
-            minWidth: s.size,
-            padding: count > 1 ? "0 4px" : 0,
-            fontSize: s.fontSize,
-            lineHeight: 1,
-            borderRadius: s.borderRadius,
-            boxShadow: s.boxShadow,
-          }}
-          title={`${count} ${isBuy ? "buy" : "sell"}${count > 1 ? "s" : ""} · ${tier.label}`}
         >
-          {isBuy ? "B" : "S"}
-          {count > 1 ? (
-            <sub style={{ fontSize: Math.max(8, s.fontSize - 2), marginLeft: 1 }}>
-              ×{count}
-            </sub>
-          ) : null}
+          <div
+            className={
+              "font-mono font-bold tracking-tight flex items-center justify-center " +
+              (s.className ?? "")
+            }
+            style={{
+              background: s.background,
+              color: s.color,
+              width: s.size,
+              height: s.size,
+              fontSize: s.fontSize,
+              lineHeight: 1,
+              borderRadius: s.borderRadius,
+              boxShadow: s.boxShadow,
+            }}
+          >
+            {type === "turn" ? "T" : isBuy ? "B" : "S"}
+          </div>
+          {count > 1 && (
+            <span
+              className="font-mono font-bold flex items-center justify-center"
+              style={{
+                position: "absolute",
+                // Sit on the side opposite the candle so the pill never crowds
+                // the connector / tail: buys (badge below) → bottom-right,
+                // sells (badge above) → top-right. Turnarounds follow the
+                // dominant direction via `isBuy`.
+                ...(isBuy ? { bottom: -4 } : { top: -4 }),
+                right: -4,
+                minWidth: 11,
+                height: 11,
+                padding: "0 2px",
+                borderRadius: 999,
+                background: s.background,
+                color: s.color,
+                fontSize: 7,
+                lineHeight: 1,
+                border: "1px solid #fdfaf0",
+                boxShadow: "0 1px 2px rgba(0,0,0,0.25)",
+              }}
+            >
+              {count}
+            </span>
+          )}
         </div>
       </div>
       {/* Tail rendered AFTER badge so it sits on top of the badge's ring,

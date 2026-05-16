@@ -101,13 +101,6 @@ export default function Stock() {
         </div>
       </header>
 
-      <section className="bg-panel border border-border p-3 sm:p-4">
-        <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted mb-3">
-          Daily activity
-        </h2>
-        <StockMonthlyChart transactions={stock.transactions} />
-      </section>
-
       {showMarketChart && (
         <section className="bg-panel border border-border p-3 sm:p-4">
           <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
@@ -122,6 +115,24 @@ export default function Stock() {
               <span className="inline-flex items-center gap-1">
                 <span className="inline-block w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-l-transparent border-r-transparent border-t-sell" />
                 Sell
+              </span>
+              <span className="inline-flex items-center gap-1 relative group cursor-help">
+                <span
+                  className="inline-block w-[7px] h-[7px] rotate-45"
+                  style={{ background: "#ad880f" }}
+                />
+                <span className="underline decoration-dotted decoration-muted/70 underline-offset-[3px]">
+                  Turnaround
+                </span>
+                <span
+                  role="tooltip"
+                  className="hidden group-hover:block group-focus-within:block absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-panel border border-ink shadow-lg px-3 py-2 text-[11px] normal-case tracking-normal text-ink leading-relaxed z-30 pointer-events-none"
+                >
+                  A day with both <span className="text-buy">buys</span> and{" "}
+                  <span className="text-sell">sells</span>. The marker sits on
+                  the dominant side; its size reflects <em>net</em> volume
+                  (|buy − sell|).
+                </span>
               </span>
               <span className="text-border">·</span>
               <span className="whitespace-nowrap">
@@ -145,6 +156,13 @@ export default function Stock() {
           </div>
         </section>
       )}
+
+      <section className="bg-panel border border-border p-3 sm:p-4">
+        <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted mb-3">
+          Daily activity
+        </h2>
+        <StockMonthlyChart transactions={stock.transactions} />
+      </section>
 
       <section className="bg-panel border border-border p-3 sm:p-4">
         <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted mb-3">
