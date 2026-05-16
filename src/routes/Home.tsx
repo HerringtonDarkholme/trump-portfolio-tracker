@@ -1,5 +1,5 @@
 import { dataset } from "../lib/dataset";
-import { fmt$, fmtSigned$, fmtInt } from "../lib/format";
+import { KpiInt, KpiDollar } from "../components/Kpi";
 import SectorHeatmap from "../components/SectorHeatmap";
 import Leaderboard from "../components/Leaderboard";
 import DailyActivityChart from "../components/DailyActivityChart";
@@ -9,10 +9,24 @@ export default function Home() {
   return (
     <div className="grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)]">
       <section className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-        <Kpi label="Transactions" value={fmtInt(t.txCount)} sub={`${fmtInt(t.buyCount)} buys · ${fmtInt(t.sellCount)} sells`} />
-        <Kpi label="Total volume (est.)" value={fmt$(t.totalVolume)} sub="Sum of bucket midpoints" />
-        <Kpi label="Net flow" value={fmtSigned$(t.netFlow)} sub="Buys − Sells" color={t.netFlow >= 0 ? "buy" : "sell"} />
-        <Kpi label="Unique tickers" value={fmtInt(t.uniqueTickers)} sub="All resolved" />
+        <KpiInt
+          label="Transactions"
+          value={t.txCount}
+          sub={`${t.buyCount.toLocaleString()} buys · ${t.sellCount.toLocaleString()} sells`}
+        />
+        <KpiDollar
+          label="Total volume (est.)"
+          value={t.totalVolume}
+          sub="Sum of bucket midpoints"
+        />
+        <KpiDollar
+          label="Net flow"
+          value={t.netFlow}
+          signed
+          sub="Buys − Sells"
+          color={t.netFlow >= 0 ? "buy" : "sell"}
+        />
+        <KpiInt label="Unique tickers" value={t.uniqueTickers} sub="All resolved" />
       </section>
 
       <section className="bg-panel border border-border p-3 sm:p-5">
@@ -27,29 +41,6 @@ export default function Home() {
 
       <SectorHeatmap />
       <Leaderboard />
-    </div>
-  );
-}
-
-function Kpi({
-  label,
-  value,
-  sub,
-  color,
-}: {
-  label: string;
-  value: string;
-  sub?: string;
-  color?: "buy" | "sell";
-}) {
-  return (
-    <div className="bg-panel border border-border p-3 sm:p-5 relative min-w-0">
-      <div className="absolute top-0 left-0 w-10 sm:w-12 h-0.5 bg-accent" />
-      <div className="text-[11px] sm:text-[11px] font-medium uppercase tracking-[0.16em] sm:tracking-[0.18em] text-muted truncate">{label}</div>
-      <div className={"mt-1.5 sm:mt-2 text-xl sm:text-3xl font-serif break-all leading-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
-        {value}
-      </div>
-      {sub && <div className="text-[11px] sm:text-[11px] tracking-[0.1em] uppercase text-muted mt-1 sm:mt-1.5 truncate">{sub}</div>}
     </div>
   );
 }

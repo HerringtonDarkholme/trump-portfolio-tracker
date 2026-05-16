@@ -1,9 +1,10 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { dataset } from "../lib/dataset";
-import { fmt$, fmtSigned$, fmtInt } from "../lib/format";
+import { fmt$ } from "../lib/format";
 import SectorHeatmap from "../components/SectorHeatmap";
 import DailyActivityChart from "../components/DailyActivityChart";
+import { KpiInt, KpiDollar } from "../components/Kpi";
 
 type SortKey = "n" | "date" | "ticker" | "type" | "amount" | "mid";
 type Row = {
@@ -102,11 +103,11 @@ export default function Sector() {
       <header className="bg-panel border border-border p-3 sm:p-5">
         <h1 className="font-serif text-2xl sm:text-3xl text-ink break-words">{decoded}</h1>
         <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
-          <Mini label="Tickers" value={fmtInt(totals.tickers)} />
-          <Mini label="Transactions" value={fmtInt(totals.txCount)} sub={`${totals.buys} buys · ${totals.sells} sells`} />
-          <Mini label="Total purchased" value={fmt$(totals.totalBuy)} color="buy" />
-          <Mini label="Total sold"      value={fmt$(totals.totalSell)} color="sell" />
-          <Mini label="Net flow" value={fmtSigned$(totals.net)} color={totals.net >= 0 ? "buy" : "sell"} />
+          <KpiInt variant="md" label="Tickers" value={totals.tickers} />
+          <KpiInt variant="md" label="Transactions" value={totals.txCount} sub={`${totals.buys} buys · ${totals.sells} sells`} />
+          <KpiDollar variant="md" label="Total purchased" value={totals.totalBuy}  color="buy" />
+          <KpiDollar variant="md" label="Total sold"      value={totals.totalSell} color="sell" />
+          <KpiDollar variant="md" label="Net flow"        value={totals.net} signed color={totals.net >= 0 ? "buy" : "sell"} />
         </div>
       </header>
 
@@ -163,18 +164,6 @@ export default function Sector() {
           </table>
         </div>
       </section>
-    </div>
-  );
-}
-
-function Mini({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: "buy" | "sell" }) {
-  return (
-    <div className="bg-bg border border-border p-2 sm:p-3 relative min-w-0">
-      <div className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
-      <div className={"mt-1 text-base sm:text-lg font-semibold break-all leading-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
-        {value}
-      </div>
-      {sub && <div className="text-[11px] sm:text-[11px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }

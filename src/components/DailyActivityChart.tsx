@@ -161,15 +161,15 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
 
             {mode === "bs" ? (
               <>
-                <Area type="monotone" dataKey="buyRange"  stroke="none" fill="rgba(62,122,62,0.18)"  isAnimationActive={false} activeDot={false} legendType="none" name="buyRange" />
-                <Area type="monotone" dataKey="sellRange" stroke="none" fill="rgba(165,42,42,0.18)"  isAnimationActive={false} activeDot={false} legendType="none" name="sellRange" />
-                <Line type="monotone" dataKey="buy"  name="Purchases" stroke="#3e7a3e" strokeWidth={1.8} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="sell" name="Sales"     stroke="#a52a2a" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                <Area type="monotone" dataKey="buyRange"  stroke="none" fill="rgba(62,122,62,0.18)"  isAnimationActive animationDuration={1400} animationEasing="ease-out" activeDot={false} legendType="none" name="buyRange" />
+                <Area type="monotone" dataKey="sellRange" stroke="none" fill="rgba(165,42,42,0.18)"  isAnimationActive animationDuration={1400} animationEasing="ease-out" activeDot={false} legendType="none" name="sellRange" />
+                <Line type="monotone" dataKey="buy"  name="Purchases" stroke="#3e7a3e" strokeWidth={1.8} dot={false} isAnimationActive animationDuration={1400} animationEasing="ease-out" />
+                <Line type="monotone" dataKey="sell" name="Sales"     stroke="#a52a2a" strokeWidth={1.8} dot={false} isAnimationActive animationDuration={1400} animationEasing="ease-out" animationBegin={120} />
               </>
             ) : (
               <>
-                <Area type="monotone" dataKey="netRange" stroke="none" fill="rgba(209,179,113,0.22)" isAnimationActive={false} activeDot={false} legendType="none" name="netRange" />
-                <Line type="monotone" dataKey="net"  name="Net" stroke="#a88a4d" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                <Area type="monotone" dataKey="netRange" stroke="none" fill="rgba(209,179,113,0.22)" isAnimationActive animationDuration={1400} animationEasing="ease-out" activeDot={false} legendType="none" name="netRange" />
+                <Line type="monotone" dataKey="net"  name="Net" stroke="#a88a4d" strokeWidth={1.8} dot={false} isAnimationActive animationDuration={1400} animationEasing="ease-out" />
               </>
             )}
 

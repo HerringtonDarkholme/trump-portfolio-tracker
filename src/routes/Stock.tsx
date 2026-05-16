@@ -1,8 +1,9 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { dataset } from "../lib/dataset";
-import { fmt$, fmtSigned$ } from "../lib/format";
+import { fmt$ } from "../lib/format";
 import StockMonthlyChart from "../components/StockMonthlyChart";
+import { KpiInt, KpiDollar } from "../components/Kpi";
 
 type SortKey = "n" | "date" | "type" | "amount" | "mid";
 
@@ -74,14 +75,10 @@ export default function Stock() {
         )}
 
         <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-          <Mini label="Total purchased" value={fmt$(stock.totalBuy)} color="buy" />
-          <Mini label="Total sold"      value={fmt$(stock.totalSell)} color="sell" />
-          <Mini
-            label="Net flow"
-            value={fmtSigned$(stock.net)}
-            color={stock.net >= 0 ? "buy" : "sell"}
-          />
-          <Mini label="Transactions" value={String(stock.txCount)} />
+          <KpiDollar variant="md" label="Total purchased" value={stock.totalBuy}  color="buy" />
+          <KpiDollar variant="md" label="Total sold"      value={stock.totalSell} color="sell" />
+          <KpiDollar variant="md" label="Net flow"        value={stock.net} signed color={stock.net >= 0 ? "buy" : "sell"} />
+          <KpiInt    variant="md" label="Transactions"    value={stock.txCount} />
         </div>
       </header>
 
@@ -136,25 +133,6 @@ export default function Stock() {
           </table>
         </div>
       </section>
-    </div>
-  );
-}
-
-function Mini({
-  label,
-  value,
-  color,
-}: {
-  label: string;
-  value: string;
-  color?: "buy" | "sell";
-}) {
-  return (
-    <div className="bg-bg border border-border p-2 sm:p-3 relative min-w-0">
-      <div className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
-      <div className={"mt-1 text-base sm:text-lg font-semibold break-all leading-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
-        {value}
-      </div>
     </div>
   );
 }

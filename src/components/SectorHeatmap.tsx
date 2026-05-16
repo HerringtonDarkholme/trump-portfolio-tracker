@@ -266,6 +266,15 @@ function HeatmapSvg({
                   const txt = netFlowTextColor(s.net, totalVol);
                   const showTicker = w > 40 && h > 20;
                   const showVol = w > 86 && h > 42;
+                  const showNet = showVol && h > 60;
+                  const lines: { text: string; fontSize: number; weight: number; opacity: number }[] = [];
+                  if (showTicker) lines.push({ text: s.ticker, fontSize: 12, weight: 700, opacity: 1 });
+                  if (showVol) lines.push({ text: fmt$(totalVol), fontSize: 11, weight: 400, opacity: 0.85 });
+                  if (showNet) lines.push({ text: (s.net >= 0 ? "+" : "") + fmt$(s.net), fontSize: 11, weight: 400, opacity: 0.85 });
+                  const LH = 14;
+                  const block = lines.length * LH;
+                  const startY = (h - block) / 2 + LH * 0.78; // baseline of first line
+                  const cx = w / 2;
                   return (
                     <g
                       key={`l-${s.ticker}`}
@@ -293,43 +302,21 @@ function HeatmapSvg({
                         stroke="#fdfaf0"
                         strokeWidth={1}
                       />
-                      {showTicker && (
+                      {lines.map((ln, idx) => (
                         <text
-                          x={4}
-                          y={15}
-                          fontSize={12}
-                          fontWeight={700}
+                          key={idx}
+                          x={cx}
+                          y={startY + idx * LH}
+                          fontSize={ln.fontSize}
+                          fontWeight={ln.weight}
                           fill={txt}
+                          opacity={ln.opacity}
+                          textAnchor="middle"
                           style={{ pointerEvents: "none" }}
                         >
-                          {s.ticker}
+                          {ln.text}
                         </text>
-                      )}
-                      {showVol && (
-                        <text
-                          x={4}
-                          y={30}
-                          fontSize={11}
-                          fill={txt}
-                          opacity={0.85}
-                          style={{ pointerEvents: "none" }}
-                        >
-                          {fmt$(totalVol)}
-                        </text>
-                      )}
-                      {showVol && h > 58 && (
-                        <text
-                          x={4}
-                          y={45}
-                          fontSize={11}
-                          fill={txt}
-                          opacity={0.85}
-                          style={{ pointerEvents: "none" }}
-                        >
-                          {s.net >= 0 ? "+" : ""}
-                          {fmt$(s.net)}
-                        </text>
-                      )}
+                      ))}
                     </g>
                   );
                 }
