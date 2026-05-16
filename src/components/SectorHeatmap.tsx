@@ -66,6 +66,9 @@ type Tooltip = { x: number; y: number; stock: Stock; containerW?: number; contai
 // Power scale for the min-volume slider: more granularity at low end where most stocks live.
 const SLIDER_MAX = 100;
 const sliderToVolume = (n: number) => Math.round(Math.pow(n / SLIDER_MAX, 2.4) * 5_000_000);
+const volumeToSlider = (volume: number) => Math.round(Math.pow(volume / 5_000_000, 1 / 2.4) * SLIDER_MAX);
+const HOME_DEFAULT_MIN_VOLUME = 1_000_000;
+const HOME_DEFAULT_SLIDER_POS = volumeToSlider(HOME_DEFAULT_MIN_VOLUME);
 
 export default function SectorHeatmap({
   sectorFilter,
@@ -76,8 +79,11 @@ export default function SectorHeatmap({
   dayFilter?: string;
   height?: number;
 }) {
-  const [sliderPos, setSliderPos] = useState(sectorFilter || dayFilter ? 0 : 28);
-  const minVolume = sliderToVolume(sliderPos);
+  const [sliderPos, setSliderPos] = useState(sectorFilter || dayFilter ? 0 : HOME_DEFAULT_SLIDER_POS);
+  const minVolume =
+    !sectorFilter && !dayFilter && sliderPos === HOME_DEFAULT_SLIDER_POS
+      ? HOME_DEFAULT_MIN_VOLUME
+      : sliderToVolume(sliderPos);
   const [tip, setTip] = useState<Tooltip>(null);
   const navigate = useNavigate();
 

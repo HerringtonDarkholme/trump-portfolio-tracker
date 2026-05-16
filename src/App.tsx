@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import Home from "./routes/Home";
 import Stock from "./routes/Stock";
 import Sector from "./routes/Sector";
@@ -24,7 +24,6 @@ function compareDirection(from: string, to: string): NavMode {
   return "across";
 }
 
-// Same easing as the KPI/chart animations so all motion feels of-a-piece.
 const EASE = [0.22, 1, 0.36, 1] as const;
 
 const VARIANTS: Record<NavMode, {
@@ -33,32 +32,39 @@ const VARIANTS: Record<NavMode, {
   exit:    Record<string, number>;
   transition: { duration: number; ease: typeof EASE };
 }> = {
-  // Drilling INTO detail: new page rises up from below with a subtle zoom-in;
-  // outgoing page recedes upward as if pushed back into the page stack.
   in: {
-    initial: { opacity: 0, scale: 0.96, y: 18 },
-    animate: { opacity: 1, scale: 1,    y: 0  },
-    exit:    { opacity: 0, scale: 1.04, y: -12 },
+    initial: { opacity: 0, scale: 0.985, y: 18 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit:    { opacity: 0, scale: 1.015, y: -12 },
     transition: { duration: 0.36, ease: EASE },
   },
-  // Drilling UP to overview: reverse the drill-in — outgoing falls away below,
-  // incoming settles down from above.
   out: {
-    initial: { opacity: 0, scale: 1.04, y: -12 },
-    animate: { opacity: 1, scale: 1,    y: 0   },
-    exit:    { opacity: 0, scale: 0.96, y: 18  },
+    initial: { opacity: 0, scale: 1.015, y: -12 },
+    animate: { opacity: 1, scale: 1, y: 0 },
+    exit:    { opacity: 0, scale: 0.985, y: 18 },
     transition: { duration: 0.36, ease: EASE },
   },
-  // Lateral siblings (Stock ↔ Sector ↔ Day): horizontal sweep.
   across: {
     initial: { opacity: 0, x: 36 },
-    animate: { opacity: 1, x: 0  },
+    animate: { opacity: 1, x: 0 },
     exit:    { opacity: 0, x: -36 },
     transition: { duration: 0.30, ease: EASE },
   },
 };
 
-function Page({ mode, children }: { mode: NavMode; children: React.ReactNode }) {
+function Page({
+  mode,
+  reduceMotion,
+  children,
+}: {
+  mode: NavMode;
+  reduceMotion: boolean;
+  children: React.ReactNode;
+}) {
+  if (reduceMotion) {
+    return <div>{children}</div>;
+  }
+
   const v = VARIANTS[mode];
   return (
     <motion.div
@@ -76,6 +82,7 @@ function Page({ mode, children }: { mode: NavMode; children: React.ReactNode }) 
 function AnimatedRoutes() {
   const location = useLocation();
   const prevPathRef = useRef<string>(location.pathname);
+  const reduceMotion = useReducedMotion();
 
   const mode = useMemo<NavMode>(
     () => compareDirection(prevPathRef.current, location.pathname),
@@ -87,15 +94,23 @@ function AnimatedRoutes() {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, [location.pathname]);
 
+  const routes = (
+    <Routes location={location} key={reduceMotion ? undefined : location.pathname}>
+      <Route path="/"               element={<Page mode={mode} reduceMotion={!!reduceMotion}><Home /></Page>} />
+      <Route path="/stock/:ticker"  element={<Page mode={mode} reduceMotion={!!reduceMotion}><Stock /></Page>} />
+      <Route path="/sector/:sector" element={<Page mode={mode} reduceMotion={!!reduceMotion}><Sector /></Page>} />
+      <Route path="/day/:date"      element={<Page mode={mode} reduceMotion={!!reduceMotion}><Day /></Page>} />
+      <Route path="/sitemap"        element={<Page mode={mode} reduceMotion={!!reduceMotion}><Sitemap /></Page>} />
+    </Routes>
+  );
+
+  if (reduceMotion) {
+    return routes;
+  }
+
   return (
     <AnimatePresence mode="wait" initial={false}>
-      <Routes location={location} key={location.pathname}>
-        <Route path="/"               element={<Page mode={mode}><Home /></Page>} />
-        <Route path="/stock/:ticker"  element={<Page mode={mode}><Stock /></Page>} />
-        <Route path="/sector/:sector" element={<Page mode={mode}><Sector /></Page>} />
-        <Route path="/day/:date"      element={<Page mode={mode}><Day /></Page>} />
-        <Route path="/sitemap"        element={<Page mode={mode}><Sitemap /></Page>} />
-      </Routes>
+      {routes}
     </AnimatePresence>
   );
 }

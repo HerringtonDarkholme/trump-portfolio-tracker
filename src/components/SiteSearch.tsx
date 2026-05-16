@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { dataset } from "../lib/dataset";
 
@@ -53,6 +54,7 @@ export default function SiteSearch() {
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [focusIdx, setFocusIdx] = useState(0);
+  const reduceMotion = useReducedMotion();
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
   const wrapRef = useRef<HTMLDivElement>(null);
@@ -124,50 +126,58 @@ export default function SiteSearch() {
         <kbd className="hidden sm:inline absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
       </div>
 
-      {open && query && (
-        <div className="absolute left-0 right-0 mt-1 bg-panel border border-border rounded-md shadow-2xl overflow-hidden z-50">
-          {hits.length === 0 ? (
-            <div className="px-3 py-4 text-xs text-muted text-center">No matches for "{query}"</div>
-          ) : (
-            <ul>
-              {hits.map((h, i) => {
-                const active = i === focusIdx;
-                const cls = "px-3 py-2 cursor-pointer flex items-center justify-between gap-3 " +
-                  (active ? "bg-accent/15" : "hover:bg-panel2/60");
-                return (
-                  <li key={`${h.kind}-${i}`} onMouseEnter={() => setFocusIdx(i)} onClick={() => go(h)} className={cls}>
-                    {h.kind === "stock" ? (
-                      <>
-                        <div className="min-w-0 flex-1">
-                          <div className="font-mono text-accent text-sm">{h.ticker}</div>
-                          <div className="text-xs text-muted truncate">{h.name}</div>
-                        </div>
-                        <span className="text-[11px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border whitespace-nowrap">
-                          {h.sector}
-                        </span>
-                      </>
-                    ) : (
-                      <>
-                        <div>
-                          <div className="text-sm text-ink">{h.sector}</div>
-                          <div className="text-xs text-muted">{h.tickerCount} tickers</div>
-                        </div>
-                        <span className="text-[11px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border">
-                          sector
-                        </span>
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          )}
-          <div className="border-t border-border px-3 py-1.5 text-[11px] text-muted flex justify-between">
-            <span>↑↓ navigate · ↵ open · esc close</span>
-            <span>{hits.length} match{hits.length === 1 ? "" : "es"}</span>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {open && query && (
+          <motion.div
+            initial={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -4, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={reduceMotion ? { opacity: 1 } : { opacity: 0, y: -4, scale: 0.99 }}
+            transition={{ duration: reduceMotion ? 0 : 0.16, ease: [0.22, 1, 0.36, 1] }}
+            className="absolute left-0 right-0 mt-1 bg-panel border border-border rounded-md shadow-2xl overflow-hidden z-50 origin-top"
+          >
+            {hits.length === 0 ? (
+              <div className="px-3 py-4 text-xs text-muted text-center">No matches for "{query}"</div>
+            ) : (
+              <ul>
+                {hits.map((h, i) => {
+                  const active = i === focusIdx;
+                  const cls = "px-3 py-2 cursor-pointer flex items-center justify-between gap-3 " +
+                    (active ? "bg-accent/15" : "hover:bg-panel2/60");
+                  return (
+                    <li key={`${h.kind}-${i}`} onMouseEnter={() => setFocusIdx(i)} onClick={() => go(h)} className={cls}>
+                      {h.kind === "stock" ? (
+                        <>
+                          <div className="min-w-0 flex-1">
+                            <div className="font-mono text-accent text-sm">{h.ticker}</div>
+                            <div className="text-xs text-muted truncate">{h.name}</div>
+                          </div>
+                          <span className="text-[11px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border whitespace-nowrap">
+                            {h.sector}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <div>
+                            <div className="text-sm text-ink">{h.sector}</div>
+                            <div className="text-xs text-muted">{h.tickerCount} tickers</div>
+                          </div>
+                          <span className="text-[11px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border">
+                            sector
+                          </span>
+                        </>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="border-t border-border px-3 py-1.5 text-[11px] text-muted flex justify-between">
+              <span>↑↓ navigate · ↵ open · esc close</span>
+              <span>{hits.length} match{hits.length === 1 ? "" : "es"}</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
