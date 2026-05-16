@@ -96,13 +96,13 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
 
   return (
     <>
-      <div className="flex items-center justify-end gap-2 mb-2 -mt-1">
+      <div className="flex items-center justify-end gap-2 mb-2 -mt-1 flex-wrap">
         <span className="text-[10px] tracking-[0.15em] uppercase text-muted">View:</span>
         <div className="inline-flex overflow-hidden border border-ink">
           <button
             onClick={() => setMode("bs")}
             className={
-              "px-3 py-1 text-[10px] tracking-[0.12em] uppercase " +
+              "px-2.5 sm:px-3 py-1 text-[10px] tracking-[0.12em] uppercase " +
               (mode === "bs"
                 ? "bg-ink text-bg"
                 : "bg-bg text-ink hover:bg-panel2")
@@ -113,7 +113,7 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
           <button
             onClick={() => setMode("net")}
             className={
-              "px-3 py-1 text-[10px] tracking-[0.12em] uppercase border-l border-ink " +
+              "px-2.5 sm:px-3 py-1 text-[10px] tracking-[0.12em] uppercase border-l border-ink " +
               (mode === "net"
                 ? "bg-ink text-bg"
                 : "bg-bg text-ink hover:bg-panel2")
@@ -124,11 +124,11 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
         </div>
       </div>
 
-      <div style={{ width: "100%", height: 320 }}>
+      <div className="w-full h-[260px] sm:h-[320px]">
         <ResponsiveContainer>
           <ComposedChart
             data={data}
-            margin={{ top: 10, right: 16, bottom: 4, left: 4 }}
+            margin={{ top: 10, right: 8, bottom: 4, left: 0 }}
             onClick={(e: { activeLabel?: string; activePayload?: Array<{ payload: Row }> }) => {
               const date = e?.activeLabel;
               const row = e?.activePayload?.[0]?.payload;
@@ -142,15 +142,19 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
             <XAxis
               dataKey="date"
               stroke="#6b6b62"
-              tick={{ fontSize: 11 }}
+              tick={{ fontSize: 10 }}
               interval="preserveStartEnd"
-              minTickGap={48}
+              minTickGap={56}
               tickFormatter={(v) => v.slice(5)}
             />
             <YAxis
               stroke="#6b6b62"
-              tick={{ fontSize: 11 }}
-              tickFormatter={(v) => fmt$(Math.abs(Number(v)))}
+              tick={{ fontSize: 10 }}
+              width={64}
+              tickFormatter={(v) => {
+                const n = Number(v);
+                return (n < 0 ? "−" : "") + fmt$(Math.abs(n));
+              }}
               allowDataOverflow={false}
             />
             <ReferenceLine y={0} stroke="#a88a4d" strokeOpacity={0.35} />

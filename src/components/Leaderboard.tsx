@@ -33,15 +33,15 @@ export default function Leaderboard() {
   }, [tab, sector]);
 
   return (
-    <section className="bg-panel border border-border p-5">
+    <section className="bg-panel border border-border p-3 sm:p-5">
       <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <h2 className="font-serif text-2xl text-ink">
+        <h2 className="font-serif text-xl sm:text-2xl text-ink">
           Leaderboard
         </h2>
         <div className="flex items-center gap-2 text-xs">
           <label className="text-muted text-[10px] tracking-[0.15em] uppercase">Sector:</label>
           <select
-            className="bg-bg border border-ink px-2 py-1 text-ink"
+            className="bg-bg border border-ink px-2 py-1 text-ink max-w-[160px]"
             value={sector}
             onChange={(e) => setSector(e.target.value)}
           >
@@ -50,26 +50,28 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <div className="flex gap-0 mb-4 flex-wrap border border-ink inline-flex w-fit">
-        {TABS.map((t, i) => (
-          <button
-            key={t.id}
-            onClick={() => setTab(t.id)}
-            className={
-              "px-3 py-1.5 text-[10px] tracking-[0.12em] uppercase " +
-              (i > 0 ? "border-l border-ink " : "") +
-              (tab === t.id
-                ? "bg-ink text-bg"
-                : "bg-bg text-ink hover:bg-panel2")
-            }
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="-mx-3 sm:mx-0 mb-4 overflow-x-auto">
+        <div className="inline-flex border border-ink mx-3 sm:mx-0">
+          {TABS.map((t, i) => (
+            <button
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={
+                "px-2.5 sm:px-3 py-1.5 text-[10px] tracking-[0.12em] uppercase whitespace-nowrap " +
+                (i > 0 ? "border-l border-ink " : "") +
+                (tab === t.id
+                  ? "bg-ink text-bg"
+                  : "bg-bg text-ink hover:bg-panel2")
+              }
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      <div className="overflow-auto max-h-[520px] border border-border">
-        <table className="w-full text-sm">
+      <div className="overflow-x-auto overflow-y-auto max-h-[520px] border border-border -mx-3 sm:mx-0">
+        <table className="w-full text-sm min-w-[760px]">
           <thead className="bg-panel2 sticky top-0 border-b-2 border-ink">
             <tr className="text-[10px] uppercase tracking-[0.12em] text-muted">
               <th className="text-left px-3 py-2.5">#</th>
@@ -86,7 +88,7 @@ export default function Leaderboard() {
             {rows.map((s, i) => (
               <tr key={s.ticker} className="border-t border-border hover:bg-panel2/40">
                 <td className="px-3 py-2 text-muted tabular-nums">{i + 1}</td>
-                <td className="px-3 py-2 font-mono">
+                <td className="px-3 py-2 font-mono whitespace-nowrap">
                   <Link
                     to={`/stock/${encodeURIComponent(s.ticker)}`}
                     className="text-accent hover:underline"
@@ -95,7 +97,7 @@ export default function Leaderboard() {
                   </Link>
                 </td>
                 <td className="px-3 py-2 truncate max-w-[260px]" title={s.name}>{s.name}</td>
-                <td className="px-3 py-2">
+                <td className="px-3 py-2 whitespace-nowrap">
                   <Link
                     to={`/sector/${encodeURIComponent(s.sector)}`}
                     className="text-muted hover:text-accent hover:underline"
@@ -103,12 +105,12 @@ export default function Leaderboard() {
                     {s.sector}
                   </Link>
                 </td>
-                <td className="px-3 py-2 text-right text-buy">{fmt$(s.totalBuy)}</td>
-                <td className="px-3 py-2 text-right text-sell">{fmt$(s.totalSell)}</td>
-                <td className={"px-3 py-2 text-right font-medium " + (s.net >= 0 ? "text-buy" : "text-sell")}>
+                <td className="px-3 py-2 text-right text-buy whitespace-nowrap">{fmt$(s.totalBuy)}</td>
+                <td className="px-3 py-2 text-right text-sell whitespace-nowrap">{fmt$(s.totalSell)}</td>
+                <td className={"px-3 py-2 text-right font-medium whitespace-nowrap " + (s.net >= 0 ? "text-buy" : "text-sell")}>
                   {fmtSigned$(s.net)}
                 </td>
-                <td className="px-3 py-2 text-right">{s.txCount}</td>
+                <td className="px-3 py-2 text-right whitespace-nowrap">{s.txCount}</td>
               </tr>
             ))}
             {rows.length === 0 && (

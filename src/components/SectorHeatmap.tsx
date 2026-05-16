@@ -90,19 +90,19 @@ export default function SectorHeatmap({
   const visibleStocks = root.children.reduce((sum, b) => sum + b.children.length, 0);
 
   return (
-    <section className="bg-panel border border-border p-5">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
-        <div>
-          <h2 className="font-serif text-2xl text-ink">
+    <section className="bg-panel border border-border p-3 sm:p-5">
+      <div className="flex items-start sm:items-center justify-between flex-wrap gap-3 mb-4">
+        <div className="min-w-0">
+          <h2 className="font-serif text-xl sm:text-2xl text-ink">
             Sector Heatmap
           </h2>
-          <div className="text-[11px] tracking-[0.1em] uppercase text-muted mt-1">
-            {visibleStocks} stocks · {visibleSectors} sectors · cell = volume · color = net buy / net sell
+          <div className="text-[10px] sm:text-[11px] tracking-[0.1em] uppercase text-muted mt-1">
+            {visibleStocks} stocks · {visibleSectors} sectors · cell = volume · color = net
           </div>
         </div>
-        <div className="flex items-center gap-3 text-xs">
-          <label className="flex items-center gap-2 text-muted">
-            <span className="whitespace-nowrap text-[10px] tracking-[0.15em] uppercase">Min volume:</span>
+        <div className="flex items-center gap-2 sm:gap-3 text-xs w-full sm:w-auto">
+          <label className="flex items-center gap-2 text-muted w-full sm:w-auto">
+            <span className="whitespace-nowrap text-[10px] tracking-[0.15em] uppercase">Min vol:</span>
             <input
               type="range"
               min={0}
@@ -110,16 +110,16 @@ export default function SectorHeatmap({
               step={1}
               value={sliderPos}
               onChange={(e) => setSliderPos(Number(e.target.value))}
-              className="w-40 accent-accent2"
+              className="flex-1 sm:flex-none sm:w-40 accent-accent2"
             />
-            <span className="text-ink tabular-nums min-w-[60px] text-right font-serif">
+            <span className="text-ink tabular-nums min-w-[56px] text-right font-serif">
               {fmt$(minVolume)}
             </span>
           </label>
         </div>
       </div>
 
-      <div className="relative" style={{ height }}>
+      <div className="relative" style={{ height: `min(${height}px, 75vh)`, minHeight: 320 }}>
         <ParentSize>
           {({ width, height: hh }) =>
             width < 50 ? null : (
@@ -136,9 +136,10 @@ export default function SectorHeatmap({
         </ParentSize>
 
         {tip && (() => {
-          const TT_W = 240, TT_H = 130, PAD = 12;
           const w = tip.containerW ?? 1000;
           const h = tip.containerH ?? 600;
+          const TT_W = Math.min(240, w - 16);
+          const TT_H = 130, PAD = 12;
           const flipX = tip.x + PAD + TT_W > w;
           const flipY = tip.y + PAD + TT_H > h;
           const left = flipX ? Math.max(8, tip.x - PAD - TT_W) : tip.x + PAD;
@@ -225,6 +226,13 @@ function HeatmapSvg({
                 const h = n.y1 - n.y0;
                 const data = n.data;
                 if (data.kind === "branch") {
+                  const label = data.sector.toUpperCase();
+                  // Each char ~6.6px at 10px font + 0.12em letter-spacing.
+                  // Padding 12px (6 left + 6 right). Use min(...) to clip.
+                  const maxChars = Math.max(0, Math.floor((w - 12) / 6.6));
+                  const display = label.length > maxChars
+                    ? (maxChars > 1 ? label.slice(0, maxChars - 1) + "…" : "")
+                    : label;
                   return (
                     <g key={`b-${i}`} transform={`translate(${n.x0},${n.y0})`}>
                       <rect
@@ -234,17 +242,20 @@ function HeatmapSvg({
                         stroke="#a88a4d"
                         strokeWidth={1.5}
                       />
-                      <text
-                        x={6}
-                        y={14}
-                        fontSize={10}
-                        fontWeight={600}
-                        fill="#a88a4d"
-                        style={{ cursor: "pointer", letterSpacing: "0.12em" }}
-                        onClick={() => onSectorClick(data.sector)}
-                      >
-                        {data.sector.toUpperCase()}
-                      </text>
+                      {display && (
+                        <text
+                          x={6}
+                          y={14}
+                          fontSize={10}
+                          fontWeight={600}
+                          fill="#a88a4d"
+                          style={{ cursor: "pointer", letterSpacing: "0.12em" }}
+                          onClick={() => onSectorClick(data.sector)}
+                        >
+                          {display}
+                          <title>{data.sector}</title>
+                        </text>
+                      )}
                     </g>
                   );
                 }

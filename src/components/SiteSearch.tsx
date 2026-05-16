@@ -108,7 +108,7 @@ export default function SiteSearch() {
   }
 
   return (
-    <div ref={wrapRef} className="relative w-72">
+    <div ref={wrapRef} className="relative w-full max-w-xs sm:w-72 min-w-0">
       <div className="relative">
         <input
           ref={inputRef}
@@ -117,11 +117,11 @@ export default function SiteSearch() {
           onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          placeholder="Search ticker, name, sector…"
-          className="w-full bg-panel2 border border-border rounded-md pl-8 pr-9 py-1.5 text-sm text-ink placeholder-muted focus:outline-none focus:border-accent"
+          placeholder="Search ticker, name…"
+          className="w-full bg-panel2 border border-border rounded-md pl-8 pr-8 sm:pr-9 py-1.5 text-sm text-ink placeholder-muted focus:outline-none focus:border-accent"
         />
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none">⌕</span>
-        <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
+        <kbd className="hidden sm:inline absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
       </div>
 
       {open && query && (

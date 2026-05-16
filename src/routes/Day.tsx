@@ -97,17 +97,17 @@ export default function Day() {
   });
 
   return (
-    <div className="grid gap-6">
-      <nav className="text-xs text-muted">
+    <div className="grid gap-4 sm:gap-6">
+      <nav className="text-xs text-muted truncate">
         <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>
         <span className="text-ink font-mono">{date}</span>
       </nav>
 
-      <header className="bg-panel border border-border p-5">
-        <h1 className="font-serif text-3xl text-ink">{friendly}</h1>
+      <header className="bg-panel border border-border p-3 sm:p-5">
+        <h1 className="font-serif text-2xl sm:text-3xl text-ink break-words">{friendly}</h1>
         <div className="text-xs text-muted mt-1 font-mono">{date}</div>
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
           <Mini label="Transactions" value={fmtInt(totals.txCount)} sub={`${totals.buys} buys · ${totals.sells} sells`} />
           <Mini label="Tickers"      value={fmtInt(totals.tickers)} sub={`${totals.sectors} sectors`} />
           <Mini label="Total purchased" value={fmt$(totals.totalBuy)} color="buy" />
@@ -118,12 +118,12 @@ export default function Day() {
 
       <SectorHeatmap dayFilter={date} height={420} />
 
-      <section className="bg-panel border border-border p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
+      <section className="bg-panel border border-border p-3 sm:p-4">
+        <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           All transactions on {date} ({sortedTx.length})
         </h2>
-        <div className="overflow-auto max-h-[700px] border border-border">
-          <table className="w-full text-sm">
+        <div className="overflow-x-auto overflow-y-auto max-h-[700px] border border-border -mx-3 sm:mx-0">
+          <table className="w-full text-sm min-w-[800px]">
             <thead className="bg-panel2 sticky top-0">
               <tr className="text-xs uppercase tracking-wider text-muted">
                 <Th onClick={() => setSort("n")} active={sortKey === "n"} dir={sortDir}>#</Th>
@@ -155,8 +155,8 @@ export default function Day() {
                       {t.type}
                     </span>
                   </td>
-                  <td className="px-3 py-2">{t.amount}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{fmt$(t.mid)}</td>
+                  <td className="px-3 py-2 whitespace-nowrap">{t.amount}</td>
+                  <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">{fmt$(t.mid)}</td>
                 </tr>
               ))}
             </tbody>
@@ -169,12 +169,12 @@ export default function Day() {
 
 function Mini({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: "buy" | "sell" }) {
   return (
-    <div className="bg-bg border border-border p-3 relative">
-      <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-      <div className={"mt-1 text-lg font-semibold " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
+    <div className="bg-bg border border-border p-2 sm:p-3 relative min-w-0">
+      <div className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
+      <div className={"mt-1 text-base sm:text-lg font-semibold break-all leading-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
         {value}
       </div>
-      {sub && <div className="text-[10px] text-muted mt-0.5">{sub}</div>}
+      {sub && <div className="text-[9px] sm:text-[10px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }

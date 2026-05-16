@@ -29,15 +29,15 @@ export default function Sitemap() {
   const totalStocks = Object.keys(dataset.stocks).length;
 
   return (
-    <div className="grid gap-6">
-      <nav className="text-xs text-muted">
+    <div className="grid gap-4 sm:gap-6">
+      <nav className="text-xs text-muted truncate">
         <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>
         <span className="text-ink">Sitemap</span>
       </nav>
 
-      <header className="bg-panel border border-border p-5">
-        <h1 className="font-serif text-3xl text-ink">Sitemap</h1>
+      <header className="bg-panel border border-border p-3 sm:p-5">
+        <h1 className="font-serif text-2xl sm:text-3xl text-ink">Sitemap</h1>
         <div className="text-xs text-muted mt-1">
           Index of every page on the site.{" "}
           <a href="/sitemap.xml" className="text-accent hover:underline" target="_blank" rel="noreferrer">
@@ -47,7 +47,7 @@ export default function Sitemap() {
         </div>
       </header>
 
-      <section className="bg-panel border border-border p-4">
+      <section className="bg-panel border border-border p-3 sm:p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           Top-level
         </h2>
@@ -56,7 +56,7 @@ export default function Sitemap() {
         </ul>
       </section>
 
-      <section className="bg-panel border border-border p-4">
+      <section className="bg-panel border border-border p-3 sm:p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           Sectors ({sectors.length})
         </h2>
@@ -77,7 +77,7 @@ export default function Sitemap() {
         </ul>
       </section>
 
-      <section className="bg-panel border border-border p-4">
+      <section className="bg-panel border border-border p-3 sm:p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           Tickers ({fmtInt(totalStocks)})
         </h2>
@@ -105,7 +105,7 @@ export default function Sitemap() {
         </div>
       </section>
 
-      <section className="bg-panel border border-border p-4">
+      <section className="bg-panel border border-border p-3 sm:p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           Days with activity ({days.length})
         </h2>

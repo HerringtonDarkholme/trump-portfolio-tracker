@@ -59,22 +59,26 @@ export default function StockMonthlyChart({ transactions }: { transactions: Tran
   }, [data]);
 
   return (
-    <div style={{ width: "100%", height: 280 }}>
+    <div className="w-full h-[240px] sm:h-[280px]">
       <ResponsiveContainer>
-        <BarChart data={data} stackOffset="sign" margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
+        <BarChart data={data} stackOffset="sign" margin={{ top: 10, right: 8, bottom: 4, left: 0 }}>
           <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
           <XAxis
             dataKey="date"
             stroke="#6b6b62"
-            tick={{ fontSize: 11 }}
+            tick={{ fontSize: 10 }}
             interval="preserveStartEnd"
-            minTickGap={28}
+            minTickGap={36}
             tickFormatter={(v) => v.slice(5)}
           />
           <YAxis
             stroke="#6b6b62"
-            tick={{ fontSize: 11 }}
-            tickFormatter={(v) => fmt$(Math.abs(Number(v)))}
+            tick={{ fontSize: 10 }}
+            width={64}
+            tickFormatter={(v) => {
+              const n = Number(v);
+              return (n < 0 ? "−" : "") + fmt$(Math.abs(n));
+            }}
             domain={yDomain}
             allowDataOverflow={false}
           />
