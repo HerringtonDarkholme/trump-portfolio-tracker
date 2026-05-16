@@ -33,15 +33,15 @@ export default function Leaderboard() {
   }, [tab, sector]);
 
   return (
-    <section className="bg-panel border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
+    <section className="bg-panel border border-border p-5">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
+        <h2 className="font-serif text-2xl text-ink">
           Leaderboard
         </h2>
         <div className="flex items-center gap-2 text-xs">
-          <label className="text-muted">Sector:</label>
+          <label className="text-muted text-[10px] tracking-[0.15em] uppercase">Sector:</label>
           <select
-            className="bg-panel2 border border-border rounded px-2 py-1 text-white"
+            className="bg-bg border border-ink px-2 py-1 text-ink"
             value={sector}
             onChange={(e) => setSector(e.target.value)}
           >
@@ -50,16 +50,17 @@ export default function Leaderboard() {
         </div>
       </div>
 
-      <div className="flex gap-1 mb-3 flex-wrap">
-        {TABS.map((t) => (
+      <div className="flex gap-0 mb-4 flex-wrap border border-ink inline-flex w-fit">
+        {TABS.map((t, i) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
             className={
-              "px-3 py-1.5 rounded-md text-xs font-medium " +
+              "px-3 py-1.5 text-[10px] tracking-[0.12em] uppercase " +
+              (i > 0 ? "border-l border-ink " : "") +
               (tab === t.id
-                ? "bg-accent/20 text-accent border border-accent/40"
-                : "bg-panel2 text-muted hover:text-white border border-border")
+                ? "bg-ink text-bg"
+                : "bg-bg text-ink hover:bg-panel2")
             }
           >
             {t.label}
@@ -67,24 +68,24 @@ export default function Leaderboard() {
         ))}
       </div>
 
-      <div className="overflow-auto max-h-[520px] border border-border rounded-lg">
+      <div className="overflow-auto max-h-[520px] border border-border">
         <table className="w-full text-sm">
-          <thead className="bg-panel2 sticky top-0">
-            <tr className="text-xs uppercase tracking-wider text-muted">
-              <th className="text-left px-3 py-2">#</th>
-              <th className="text-left px-3 py-2">Ticker</th>
-              <th className="text-left px-3 py-2">Name</th>
-              <th className="text-left px-3 py-2">Sector</th>
-              <th className="text-right px-3 py-2">Buy</th>
-              <th className="text-right px-3 py-2">Sell</th>
-              <th className="text-right px-3 py-2">Net</th>
-              <th className="text-right px-3 py-2"># Tx</th>
+          <thead className="bg-panel2 sticky top-0 border-b-2 border-ink">
+            <tr className="text-[10px] uppercase tracking-[0.12em] text-muted">
+              <th className="text-left px-3 py-2.5">#</th>
+              <th className="text-left px-3 py-2.5">Ticker</th>
+              <th className="text-left px-3 py-2.5">Name</th>
+              <th className="text-left px-3 py-2.5">Sector</th>
+              <th className="text-right px-3 py-2.5">Buy</th>
+              <th className="text-right px-3 py-2.5">Sell</th>
+              <th className="text-right px-3 py-2.5">Net</th>
+              <th className="text-right px-3 py-2.5"># Tx</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((s, i) => (
-              <tr key={s.ticker} className="border-t border-border hover:bg-panel2/60">
-                <td className="px-3 py-2 text-muted">{i + 1}</td>
+              <tr key={s.ticker} className="border-t border-border hover:bg-panel2/40">
+                <td className="px-3 py-2 text-muted tabular-nums">{i + 1}</td>
                 <td className="px-3 py-2 font-mono">
                   <Link
                     to={`/stock/${encodeURIComponent(s.ticker)}`}

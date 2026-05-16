@@ -90,20 +90,19 @@ export default function SectorHeatmap({
   const visibleStocks = root.children.reduce((sum, b) => sum + b.children.length, 0);
 
   return (
-    <section className="bg-panel border border-border rounded-xl p-4">
-      <div className="flex items-center justify-between flex-wrap gap-3 mb-3">
+    <section className="bg-panel border border-border p-5">
+      <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
-            Sector heatmap
+          <h2 className="font-serif text-2xl text-ink">
+            Sector Heatmap
           </h2>
-          <div className="text-xs text-muted mt-1">
-            {visibleStocks} stocks across {visibleSectors} sectors · cell size = total volume ·
-            color = net buy (green) / net sell (red)
+          <div className="text-[11px] tracking-[0.1em] uppercase text-muted mt-1">
+            {visibleStocks} stocks · {visibleSectors} sectors · cell = volume · color = net buy / net sell
           </div>
         </div>
         <div className="flex items-center gap-3 text-xs">
           <label className="flex items-center gap-2 text-muted">
-            <span className="whitespace-nowrap">Min volume:</span>
+            <span className="whitespace-nowrap text-[10px] tracking-[0.15em] uppercase">Min volume:</span>
             <input
               type="range"
               min={0}
@@ -111,9 +110,9 @@ export default function SectorHeatmap({
               step={1}
               value={sliderPos}
               onChange={(e) => setSliderPos(Number(e.target.value))}
-              className="w-40 accent-accent"
+              className="w-40 accent-accent2"
             />
-            <span className="text-white tabular-nums min-w-[60px] text-right">
+            <span className="text-ink tabular-nums min-w-[60px] text-right font-serif">
               {fmt$(minVolume)}
             </span>
           </label>
@@ -146,33 +145,33 @@ export default function SectorHeatmap({
           const top  = flipY ? Math.max(8, tip.y - PAD - TT_H) : tip.y + PAD;
           return (
           <div
-            className="pointer-events-none absolute bg-panel2 border border-border rounded-md px-3 py-2 text-xs shadow-xl"
+            className="pointer-events-none absolute bg-panel border border-ink px-3 py-2 text-xs shadow-lg"
             style={{
               left, top,
               zIndex: 20,
               width: TT_W,
             }}
           >
-            <div className="font-semibold text-white">
+            <div className="font-semibold text-ink">
               {tip.stock.ticker}{" "}
-              <span className="font-normal text-muted">· {tip.stock.sector}</span>
+              <span className="font-normal text-muted text-[10px] tracking-wider uppercase">· {tip.stock.sector}</span>
             </div>
-            <div className="text-muted truncate">{tip.stock.name}</div>
+            <div className="text-muted truncate text-[11px]">{tip.stock.name}</div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
               <span className="text-muted">Buy:</span>
-              <span className="text-buy text-right">{fmt$(tip.stock.totalBuy)}</span>
+              <span className="text-buy text-right tabular-nums">{fmt$(tip.stock.totalBuy)}</span>
               <span className="text-muted">Sell:</span>
-              <span className="text-sell text-right">{fmt$(tip.stock.totalSell)}</span>
+              <span className="text-sell text-right tabular-nums">{fmt$(tip.stock.totalSell)}</span>
               <span className="text-muted">Net:</span>
               <span
-                className={"text-right " + (tip.stock.net >= 0 ? "text-buy" : "text-sell")}
+                className={"text-right tabular-nums " + (tip.stock.net >= 0 ? "text-buy" : "text-sell")}
               >
                 {fmtSigned$(tip.stock.net)}
               </span>
               <span className="text-muted"># tx:</span>
-              <span className="text-right">{tip.stock.txCount}</span>
+              <span className="text-right tabular-nums">{tip.stock.txCount}</span>
             </div>
-            <div className="text-muted mt-1 text-[10px]">Click to view all transactions</div>
+            <div className="text-muted mt-1 text-[9px] tracking-wider uppercase">Click for details</div>
           </div>
           );
         })()}
@@ -232,16 +231,16 @@ function HeatmapSvg({
                         width={w}
                         height={h}
                         fill="transparent"
-                        stroke="#0b0f17"
-                        strokeWidth={2}
+                        stroke="#a88a4d"
+                        strokeWidth={1.5}
                       />
                       <text
                         x={6}
                         y={14}
-                        fontSize={11}
-                        fontWeight={700}
-                        fill="#cbd5e1"
-                        style={{ cursor: "pointer", letterSpacing: "0.04em" }}
+                        fontSize={10}
+                        fontWeight={600}
+                        fill="#a88a4d"
+                        style={{ cursor: "pointer", letterSpacing: "0.12em" }}
                         onClick={() => onSectorClick(data.sector)}
                       >
                         {data.sector.toUpperCase()}
@@ -280,7 +279,7 @@ function HeatmapSvg({
                         width={w}
                         height={h}
                         fill={fill}
-                        stroke="#0b0f17"
+                        stroke="#fdfaf0"
                         strokeWidth={1}
                       />
                       {showTicker && (

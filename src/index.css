@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -5,9 +7,12 @@
 @layer base {
   html, body, #root { height: 100%; }
   body {
-    background: #0b0f17;
-    color: #e6ecf5;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: #f7f2e7;
+    color: #24201a;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, .font-serif {
+    font-family: "Cormorant Garamond", Georgia, "Times New Roman", serif;
   }
 }

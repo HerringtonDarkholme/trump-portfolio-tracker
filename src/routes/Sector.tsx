@@ -78,7 +78,7 @@ export default function Sector() {
 
   if (stocks.length === 0) {
     return (
-      <div className="bg-panel border border-border rounded-xl p-8 text-center">
+      <div className="bg-panel border border-border p-8 text-center">
         <div className="text-lg mb-2">Sector not found</div>
         <div className="text-muted text-sm mb-4">No tickers in <code>{decoded}</code>.</div>
         <Link to="/" className="text-accent hover:underline">← Back to dashboard</Link>
@@ -94,13 +94,13 @@ export default function Sector() {
   return (
     <div className="grid gap-6">
       <nav className="text-xs text-muted">
-        <Link to="/" className="hover:text-white">Home</Link>
+        <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>
-        <span className="text-white">{decoded}</span>
+        <span className="text-ink">{decoded}</span>
       </nav>
 
-      <header className="bg-panel border border-border rounded-xl p-5">
-        <h1 className="text-2xl font-semibold tracking-tight">{decoded}</h1>
+      <header className="bg-panel border border-border p-5">
+        <h1 className="font-serif text-3xl text-ink">{decoded}</h1>
         <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
           <Mini label="Tickers" value={fmtInt(totals.tickers)} />
           <Mini label="Transactions" value={fmtInt(totals.txCount)} sub={`${totals.buys} buys · ${totals.sells} sells`} />
@@ -110,7 +110,7 @@ export default function Sector() {
         </div>
       </header>
 
-      <section className="bg-panel border border-border rounded-xl p-4">
+      <section className="bg-panel border border-border p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-1">
           Daily activity in {decoded}
         </h2>
@@ -122,11 +122,11 @@ export default function Sector() {
 
       <SectorHeatmap sectorFilter={decoded} height={420} />
 
-      <section className="bg-panel border border-border rounded-xl p-4">
+      <section className="bg-panel border border-border p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           All transactions ({sortedTx.length})
         </h2>
-        <div className="overflow-auto max-h-[600px] border border-border rounded-lg">
+        <div className="overflow-auto max-h-[600px] border border-border">
           <table className="w-full text-sm">
             <thead className="bg-panel2 sticky top-0">
               <tr className="text-xs uppercase tracking-wider text-muted">
@@ -169,9 +169,9 @@ export default function Sector() {
 
 function Mini({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: "buy" | "sell" }) {
   return (
-    <div className="bg-panel2/60 border border-border rounded-lg p-3">
+    <div className="bg-bg border border-border p-3 relative">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-      <div className={"mt-1 text-lg font-semibold " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-white")}>
+      <div className={"mt-1 text-lg font-semibold " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
         {value}
       </div>
       {sub && <div className="text-[10px] text-muted mt-0.5">{sub}</div>}
@@ -183,7 +183,7 @@ function Th({ children, onClick, active, dir, className = "" }: {
   children: React.ReactNode; onClick: () => void; active: boolean; dir: 1 | -1; className?: string;
 }) {
   return (
-    <th onClick={onClick} className={"text-left px-3 py-2 cursor-pointer select-none hover:text-white " + className}>
+    <th onClick={onClick} className={"text-left px-3 py-2 cursor-pointer select-none hover:text-accent2 " + className}>
       {children}
       {active && <span className="ml-1 text-[10px]">{dir === 1 ? "▲" : "▼"}</span>}
     </th>

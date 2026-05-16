@@ -27,7 +27,7 @@ export default function Stock() {
 
   if (!stock) {
     return (
-      <div className="bg-panel border border-border rounded-xl p-8 text-center">
+      <div className="bg-panel border border-border p-8 text-center">
         <div className="text-lg mb-2">Ticker not found</div>
         <div className="text-muted text-sm mb-4">No record of <code>{ticker}</code> in the dataset.</div>
         <Link to="/" className="text-accent hover:underline">← Back to dashboard</Link>
@@ -45,30 +45,30 @@ export default function Stock() {
   return (
     <div className="grid gap-6">
       <nav className="text-xs text-muted">
-        <Link to="/" className="hover:text-white">Home</Link>
+        <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>
         <Link to={`/sector/${encodeURIComponent(stock.sector)}`} className="hover:text-accent">
           {stock.sector}
         </Link>
         <span className="mx-1.5">/</span>
-        <span className="text-white font-mono">{stock.ticker}</span>
+        <span className="text-ink font-mono">{stock.ticker}</span>
       </nav>
 
-      <header className="bg-panel border border-border rounded-xl p-5">
+      <header className="bg-panel border border-border p-5">
         <div className="flex items-baseline gap-3 flex-wrap">
-          <h1 className="text-2xl font-semibold tracking-tight">{stock.name}</h1>
-          <span className="font-mono text-accent text-lg">{stock.ticker}</span>
-          <span className="text-xs px-2 py-0.5 rounded-full bg-panel2 border border-border text-muted">
+          <h1 className="font-serif text-3xl text-ink">{stock.name}</h1>
+          <span className="font-mono text-accent2 text-lg">{stock.ticker}</span>
+          <span className="text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 bg-panel2 border border-border text-muted">
             {stock.sector}
           </span>
           {stock.resolution === "fuzzy" && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-300 border border-yellow-500/30">
-              fuzzy-matched
+            <span className="text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-accent/15 text-accent2 border border-accent2">
+              Fuzzy Matched
             </span>
           )}
         </div>
         {unknown && (
-          <div className="mt-2 text-xs text-yellow-300/80">
+          <div className="mt-2 text-xs text-accent2">
             Ticker not identified — add this canonical name to <code>data/ticker-seed.json</code> to map it.
           </div>
         )}
@@ -85,18 +85,18 @@ export default function Stock() {
         </div>
       </header>
 
-      <section className="bg-panel border border-border rounded-xl p-4">
+      <section className="bg-panel border border-border p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           Daily activity
         </h2>
         <StockMonthlyChart transactions={stock.transactions} />
       </section>
 
-      <section className="bg-panel border border-border rounded-xl p-4">
+      <section className="bg-panel border border-border p-4">
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3">
           All transactions ({stock.transactions.length})
         </h2>
-        <div className="overflow-auto max-h-[600px] border border-border rounded-lg">
+        <div className="overflow-auto max-h-[600px] border border-border">
           <table className="w-full text-sm">
             <thead className="bg-panel2 sticky top-0">
               <tr className="text-xs uppercase tracking-wider text-muted">
@@ -150,9 +150,9 @@ function Mini({
   color?: "buy" | "sell";
 }) {
   return (
-    <div className="bg-panel2/60 border border-border rounded-lg p-3">
+    <div className="bg-bg border border-border p-3 relative">
       <div className="text-[10px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-      <div className={"mt-1 text-lg font-semibold " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-white")}>
+      <div className={"mt-1 text-lg font-semibold " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
         {value}
       </div>
     </div>
@@ -175,7 +175,7 @@ function Th({
   return (
     <th
       onClick={onClick}
-      className={"text-left px-3 py-2 cursor-pointer select-none hover:text-white " + className}
+      className={"text-left px-3 py-2 cursor-pointer select-none hover:text-accent2 " + className}
     >
       {children}
       {active && <span className="ml-1 text-[10px]">{dir === 1 ? "▲" : "▼"}</span>}

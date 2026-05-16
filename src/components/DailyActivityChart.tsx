@@ -97,15 +97,15 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
   return (
     <>
       <div className="flex items-center justify-end gap-2 mb-2 -mt-1">
-        <span className="text-[11px] text-muted">View:</span>
-        <div className="inline-flex rounded-md overflow-hidden border border-border">
+        <span className="text-[10px] tracking-[0.15em] uppercase text-muted">View:</span>
+        <div className="inline-flex overflow-hidden border border-ink">
           <button
             onClick={() => setMode("bs")}
             className={
-              "px-2.5 py-1 text-xs " +
+              "px-3 py-1 text-[10px] tracking-[0.12em] uppercase " +
               (mode === "bs"
-                ? "bg-accent/20 text-accent"
-                : "bg-panel2 text-muted hover:text-white")
+                ? "bg-ink text-bg"
+                : "bg-bg text-ink hover:bg-panel2")
             }
           >
             Buy / Sell
@@ -113,10 +113,10 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
           <button
             onClick={() => setMode("net")}
             className={
-              "px-2.5 py-1 text-xs border-l border-border " +
+              "px-3 py-1 text-[10px] tracking-[0.12em] uppercase border-l border-ink " +
               (mode === "net"
-                ? "bg-accent/20 text-accent"
-                : "bg-panel2 text-muted hover:text-white")
+                ? "bg-ink text-bg"
+                : "bg-bg text-ink hover:bg-panel2")
             }
           >
             Net
@@ -138,34 +138,34 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
             }}
             style={{ cursor: "pointer" }}
           >
-            <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+            <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
             <XAxis
               dataKey="date"
-              stroke="#8b97ad"
+              stroke="#6b6b62"
               tick={{ fontSize: 11 }}
               interval="preserveStartEnd"
               minTickGap={48}
               tickFormatter={(v) => v.slice(5)}
             />
             <YAxis
-              stroke="#8b97ad"
+              stroke="#6b6b62"
               tick={{ fontSize: 11 }}
               tickFormatter={(v) => fmt$(Math.abs(Number(v)))}
               allowDataOverflow={false}
             />
-            <ReferenceLine y={0} stroke="#243047" />
+            <ReferenceLine y={0} stroke="#a88a4d" strokeOpacity={0.35} />
 
             {mode === "bs" ? (
               <>
-                <Area type="monotone" dataKey="buyRange"  stroke="none" fill="rgba(34,197,94,0.18)"  isAnimationActive={false} activeDot={false} legendType="none" name="buyRange" />
-                <Area type="monotone" dataKey="sellRange" stroke="none" fill="rgba(239,68,68,0.18)"  isAnimationActive={false} activeDot={false} legendType="none" name="sellRange" />
-                <Line type="monotone" dataKey="buy"  name="Purchases" stroke="#22c55e" strokeWidth={1.8} dot={false} isAnimationActive={false} />
-                <Line type="monotone" dataKey="sell" name="Sales"     stroke="#ef4444" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                <Area type="monotone" dataKey="buyRange"  stroke="none" fill="rgba(62,122,62,0.18)"  isAnimationActive={false} activeDot={false} legendType="none" name="buyRange" />
+                <Area type="monotone" dataKey="sellRange" stroke="none" fill="rgba(165,42,42,0.18)"  isAnimationActive={false} activeDot={false} legendType="none" name="sellRange" />
+                <Line type="monotone" dataKey="buy"  name="Purchases" stroke="#3e7a3e" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                <Line type="monotone" dataKey="sell" name="Sales"     stroke="#a52a2a" strokeWidth={1.8} dot={false} isAnimationActive={false} />
               </>
             ) : (
               <>
-                <Area type="monotone" dataKey="netRange" stroke="none" fill="rgba(96,165,250,0.18)" isAnimationActive={false} activeDot={false} legendType="none" name="netRange" />
-                <Line type="monotone" dataKey="net"  name="Net" stroke="#60a5fa" strokeWidth={1.8} dot={false} isAnimationActive={false} />
+                <Area type="monotone" dataKey="netRange" stroke="none" fill="rgba(209,179,113,0.22)" isAnimationActive={false} activeDot={false} legendType="none" name="netRange" />
+                <Line type="monotone" dataKey="net"  name="Net" stroke="#a88a4d" strokeWidth={1.8} dot={false} isAnimationActive={false} />
               </>
             )}
 
@@ -173,61 +173,62 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
               verticalAlign="bottom"
               content={() => (
                 <div style={{
-                  display: "flex", gap: 16, justifyContent: "center",
-                  fontSize: 12, color: "#cbd5e1", paddingTop: 8,
+                  display: "flex", gap: 20, justifyContent: "center",
+                  fontSize: 10, color: "#6b6b62", paddingTop: 8,
+                  letterSpacing: "0.12em", textTransform: "uppercase",
                 }}>
                   {mode === "bs" ? (
                     <>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 14, height: 2, background: "#22c55e", display: "inline-block" }} />
+                        <span style={{ width: 16, height: 2, background: "#3e7a3e", display: "inline-block" }} />
                         Purchases
                       </span>
                       <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                        <span style={{ width: 14, height: 2, background: "#ef4444", display: "inline-block" }} />
+                        <span style={{ width: 16, height: 2, background: "#a52a2a", display: "inline-block" }} />
                         Sales
                       </span>
                     </>
                   ) : (
                     <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                      <span style={{ width: 14, height: 2, background: "#60a5fa", display: "inline-block" }} />
-                      Net (purchases − sales)
+                      <span style={{ width: 16, height: 2, background: "#a88a4d", display: "inline-block" }} />
+                      Net (Purchases − Sales)
                     </span>
                   )}
                 </div>
               )}
             />
             <Tooltip
-              cursor={{ stroke: "rgba(255,255,255,0.15)" }}
+              cursor={{ stroke: "rgba(0,0,0,0.2)" }}
               content={({ active, payload, label }) => {
                 if (!active || !payload || !payload.length) return null;
                 const row = payload[0].payload as Row;
                 const txTotal = row.buyCount + row.sellCount;
                 return (
                   <div style={{
-                    background: "#1a2335", border: "1px solid #243047",
-                    borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "#e6ecf5",
-                    minWidth: 220,
+                    background: "#ffffff", border: "1px solid #d6c89c",
+                    padding: "10px 12px", fontSize: 12, color: "#2c2519",
+                    minWidth: 220, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                   }}>
-                    <div style={{ color: "#cbd5e1", marginBottom: 4 }}>
-                      {label} ·{" "}
-                      <span style={{ color: "#8b97ad" }}>
-                        {txTotal} tx ({row.buyCount}B / {row.sellCount}S)
+                    <div style={{ color: "#2c2519", marginBottom: 4, fontWeight: 600 }}>
+                      {label}{" "}
+                      <span style={{ color: "#6b6b62", fontWeight: 400 }}>
+                        · {txTotal} tx ({row.buyCount}B / {row.sellCount}S)
                       </span>
                     </div>
                     {mode === "bs" ? (
                       <>
                         {row.buy > 0 ? (
-                          <div style={{ color: "#22c55e" }}>
+                          <div style={{ color: "#3e7a3e" }}>
                             Buy: {fmt$(row.buy)}{" "}
-                            <span style={{ color: "#8b97ad" }}>
+                            <span style={{ color: "#6b6b62" }}>
                               ({fmt$(row.buyRange[0])} – {fmt$(row.buyRange[1])}, {row.buyCount} tx)
                             </span>
                           </div>
                         ) : null}
                         {row.sell < 0 ? (
-                          <div style={{ color: "#ef4444" }}>
+                          <div style={{ color: "#a52a2a" }}>
                             Sell: {fmt$(Math.abs(row.sell))}{" "}
-                            <span style={{ color: "#8b97ad" }}>
+                            <span style={{ color: "#6b6b62" }}>
                               ({fmt$(Math.abs(row.sellRange[1]))} – {fmt$(Math.abs(row.sellRange[0]))}, {row.sellCount} tx)
                             </span>
                           </div>
@@ -235,16 +236,16 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
                       </>
                     ) : (
                       txTotal > 0 ? (
-                        <div style={{ color: row.net >= 0 ? "#22c55e" : "#ef4444" }}>
+                        <div style={{ color: row.net >= 0 ? "#2e7d32" : "#b71c1c" }}>
                           Net: {row.net >= 0 ? "+" : "−"}{fmt$(Math.abs(row.net))}{" "}
-                          <span style={{ color: "#8b97ad" }}>
+                          <span style={{ color: "#6b6b62" }}>
                             (range {fmt$(row.netRange[0])} – {fmt$(row.netRange[1])})
                           </span>
                         </div>
                       ) : null
                     )}
                     {txTotal === 0 ? (
-                      <div style={{ color: "#8b97ad" }}>No activity</div>
+                      <div style={{ color: "#6b6b62" }}>No activity</div>
                     ) : null}
                   </div>
                 );

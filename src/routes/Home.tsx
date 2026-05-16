@@ -15,12 +15,12 @@ export default function Home() {
         <Kpi label="Unique tickers" value={fmtInt(t.uniqueTickers)} sub="All resolved" />
       </section>
 
-      <section className="bg-panel border border-border rounded-xl p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-1">
-          Daily activity (all holdings)
+      <section className="bg-panel border border-border p-5">
+        <h2 className="font-serif text-2xl text-ink mb-1">
+          Daily Activity
         </h2>
-        <div className="text-xs text-muted mb-3">
-          Purchases above zero, sales below. Error bars = disclosed dollar range per day.
+        <div className="text-[11px] tracking-[0.1em] uppercase text-muted mb-3">
+          All holdings · purchases above zero · sales below · bands = disclosed range
         </div>
         <DailyActivityChart />
       </section>
@@ -43,12 +43,13 @@ function Kpi({
   color?: "buy" | "sell";
 }) {
   return (
-    <div className="bg-panel border border-border rounded-xl p-4">
-      <div className="text-[11px] font-semibold uppercase tracking-wider text-muted">{label}</div>
-      <div className={"mt-1 text-2xl font-semibold tracking-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-white")}>
+    <div className="bg-panel border border-border p-5 relative">
+      <div className="absolute top-0 left-0 w-12 h-0.5 bg-accent" />
+      <div className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted">{label}</div>
+      <div className={"mt-2 text-3xl font-serif " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
         {value}
       </div>
-      {sub && <div className="text-[11px] text-muted mt-1">{sub}</div>}
+      {sub && <div className="text-[10px] tracking-[0.1em] uppercase text-muted mt-1.5">{sub}</div>}
     </div>
   );
 }

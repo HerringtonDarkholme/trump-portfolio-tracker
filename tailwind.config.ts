@@ -5,22 +5,31 @@ export default {
   theme: {
     extend: {
       colors: {
-        bg: "#0b0f17",
-        panel: "#131a26",
-        panel2: "#1a2335",
-        border: "#243047",
-        muted: "#8b97ad",
-        buy: "#22c55e",
-        sell: "#ef4444",
-        accent: "#60a5fa",
+        bg: "#f7f2e7",         // soft cream, between near-white and warm cream
+        panel: "#fdfaf0",      // pale cream card
+        panel2: "#ede5cc",     // sand for hover / active
+        border: "#ddd2b0",     // tan border
+        muted: "#737060",      // muted warm gray
+        buy: "#3a7a3a",        // forest green
+        sell: "#a52a2a",       // brick red
+        accent: "#d1b371",     // brass-gold tint (rgb 209,179,113)
+        accent2: "#a88a4d",    // deeper gold for hover
+        ink: "#24201a",        // warm dark
       },
       fontFamily: {
         sans: [
+          "Inter",
           "-apple-system",
           "BlinkMacSystemFont",
           "Segoe UI",
           "Roboto",
           "sans-serif",
+        ],
+        serif: [
+          "Cormorant Garamond",
+          "Georgia",
+          "Times New Roman",
+          "serif",
         ],
       },
     },

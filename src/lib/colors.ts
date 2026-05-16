@@ -1,9 +1,8 @@
-// Diverging green ↔ gray ↔ red scale on net-flow ratio in [-1, 1].
-// Intensity also scales with absolute net volume so tiny imbalances aren't saturated.
+// Diverging green ↔ neutral ↔ red scale for net-flow on a light/cream background.
 
-const BUY = { r: 34, g: 197, b: 94 };   // green-500
-const SELL = { r: 239, g: 68, b: 68 };  // red-500
-const NEUTRAL = { r: 50, g: 60, b: 78 };
+const BUY = { r: 58, g: 122, b: 58 };     // forest green
+const SELL = { r: 165, g: 42, b: 42 };    // brick red
+const NEUTRAL = { r: 235, g: 225, b: 196 }; // sand neutral over panel #fdfaf0
 
 function mix(a: { r: number; g: number; b: number }, b: { r: number; g: number; b: number }, t: number) {
   return {
@@ -21,15 +20,14 @@ function toHex({ r, g, b }: { r: number; g: number; b: number }) {
 export function netFlowColor(net: number, totalVolume: number, dampen = 0.5): string {
   if (totalVolume === 0) return toHex(NEUTRAL);
   const ratio = Math.max(-1, Math.min(1, net / totalVolume));
-  // dampen pulls weak ratios toward neutral — `intensity` ∈ [0, 1]
   const intensity = Math.pow(Math.abs(ratio), dampen);
   const target = ratio >= 0 ? BUY : SELL;
   return toHex(mix(NEUTRAL, target, intensity));
 }
 
 export function netFlowTextColor(net: number, totalVolume: number): string {
-  // White on saturated colors, lighter gray on neutral
-  if (totalVolume === 0) return "#cbd5e1";
+  // White text on saturated colors, ink-black on cream/light cells.
+  if (totalVolume === 0) return "#1a1a1a";
   const ratio = Math.abs(net / totalVolume);
-  return ratio > 0.15 ? "#ffffff" : "#cbd5e1";
+  return ratio > 0.35 ? "#ffffff" : "#1a1a1a";
 }

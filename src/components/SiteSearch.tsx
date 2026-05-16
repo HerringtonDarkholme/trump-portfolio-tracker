@@ -118,7 +118,7 @@ export default function SiteSearch() {
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
           placeholder="Search ticker, name, sector…"
-          className="w-full bg-panel2 border border-border rounded-md pl-8 pr-9 py-1.5 text-sm text-white placeholder-muted focus:outline-none focus:border-accent"
+          className="w-full bg-panel2 border border-border rounded-md pl-8 pr-9 py-1.5 text-sm text-ink placeholder-muted focus:outline-none focus:border-accent"
         />
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none">⌕</span>
         <kbd className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
@@ -149,7 +149,7 @@ export default function SiteSearch() {
                     ) : (
                       <>
                         <div>
-                          <div className="text-sm text-white">{h.sector}</div>
+                          <div className="text-sm text-ink">{h.sector}</div>
                           <div className="text-xs text-muted">{h.tickerCount} tickers</div>
                         </div>
                         <span className="text-[10px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border">

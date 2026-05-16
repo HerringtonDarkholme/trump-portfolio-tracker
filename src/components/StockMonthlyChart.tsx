@@ -62,54 +62,47 @@ export default function StockMonthlyChart({ transactions }: { transactions: Tran
     <div style={{ width: "100%", height: 280 }}>
       <ResponsiveContainer>
         <BarChart data={data} stackOffset="sign" margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
-          <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
+          <CartesianGrid stroke="rgba(0,0,0,0.06)" vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#8b97ad"
+            stroke="#6b6b62"
             tick={{ fontSize: 11 }}
             interval="preserveStartEnd"
             minTickGap={28}
             tickFormatter={(v) => v.slice(5)}
           />
           <YAxis
-            stroke="#8b97ad"
+            stroke="#6b6b62"
             tick={{ fontSize: 11 }}
             tickFormatter={(v) => fmt$(Math.abs(Number(v)))}
             domain={yDomain}
             allowDataOverflow={false}
           />
-          <ReferenceLine y={0} stroke="#243047" />
+          <ReferenceLine y={0} stroke="#a88a4d" strokeOpacity={0.35} />
           <Tooltip
-            cursor={{ fill: "rgba(255,255,255,0.04)" }}
-            contentStyle={{
-              background: "#1a2335",
-              border: "1px solid #243047",
-              borderRadius: 8,
-              fontSize: 12,
-            }}
-            labelStyle={{ color: "#cbd5e1" }}
+            cursor={{ fill: "rgba(0,0,0,0.04)" }}
             content={({ active, payload, label }) => {
               if (!active || !payload || !payload.length) return null;
               const row = payload[0].payload as Row;
               return (
                 <div style={{
-                  background: "#1a2335", border: "1px solid #243047",
-                  borderRadius: 8, padding: "8px 10px", fontSize: 12, color: "#e6ecf5",
-                  minWidth: 200,
+                  background: "#ffffff", border: "1px solid #d6c89c",
+                  padding: "10px 12px", fontSize: 12, color: "#2c2519",
+                  minWidth: 200, boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                 }}>
-                  <div style={{ color: "#cbd5e1", marginBottom: 4 }}>{label}</div>
+                  <div style={{ color: "#2c2519", marginBottom: 4, fontWeight: 600 }}>{label}</div>
                   {row.buy > 0 && (
-                    <div style={{ color: "#22c55e" }}>
+                    <div style={{ color: "#3e7a3e" }}>
                       Buy: {fmt$(row.buy)}{" "}
-                      <span style={{ color: "#8b97ad" }}>
+                      <span style={{ color: "#6b6b62" }}>
                         ({fmt$(row.buyLow)} – {fmt$(row.buyHigh)})
                       </span>
                     </div>
                   )}
                   {row.sell < 0 && (
-                    <div style={{ color: "#ef4444" }}>
+                    <div style={{ color: "#a52a2a" }}>
                       Sell: {fmt$(Math.abs(row.sell))}{" "}
-                      <span style={{ color: "#8b97ad" }}>
+                      <span style={{ color: "#6b6b62" }}>
                         ({fmt$(Math.abs(row.sellHigh))} – {fmt$(Math.abs(row.sellLow))})
                       </span>
                     </div>
@@ -118,11 +111,11 @@ export default function StockMonthlyChart({ transactions }: { transactions: Tran
               );
             }}
           />
-          <Bar dataKey="buy" stackId="x" fill="rgba(34,197,94,0.85)" name="Purchases" isAnimationActive={false}>
-            <ErrorBar dataKey="buyErr" width={6} strokeWidth={1.5} stroke="#86efac" direction="y" />
+          <Bar dataKey="buy" stackId="x" fill="rgba(62,122,62,0.85)" name="Purchases" isAnimationActive={false}>
+            <ErrorBar dataKey="buyErr" width={6} strokeWidth={1.5} stroke="#1b4d1e" direction="y" />
           </Bar>
-          <Bar dataKey="sell" stackId="x" fill="rgba(239,68,68,0.85)" name="Sales" isAnimationActive={false}>
-            <ErrorBar dataKey="sellErr" width={6} strokeWidth={1.5} stroke="#fca5a5" direction="y" />
+          <Bar dataKey="sell" stackId="x" fill="rgba(165,42,42,0.85)" name="Sales" isAnimationActive={false}>
+            <ErrorBar dataKey="sellErr" width={6} strokeWidth={1.5} stroke="#7a0e0e" direction="y" />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
