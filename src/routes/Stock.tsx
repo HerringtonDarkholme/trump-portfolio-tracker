@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { dataset } from "../lib/dataset";
 import { fmt$ } from "../lib/format";
@@ -8,6 +8,7 @@ import CompanyLogo from "../components/CompanyLogo";
 import { KpiInt, KpiDollar } from "../components/Kpi";
 
 type SortKey = "n" | "date" | "type" | "amount" | "mid";
+type Candle = { time: string; open: number; high: number; low: number; close: number };
 
 export default function Stock() {
   const { ticker = "" } = useParams();
@@ -15,6 +16,33 @@ export default function Stock() {
 
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
+  const [priceMap, setPriceMap] = useState<Map<string, Candle> | null>(null);
+
+  useEffect(() => {
+    setPriceMap(null);
+    if (!stock) return;
+    const unknown = stock.ticker.startsWith("UNKN-");
+    // Mirror Market chart's eligibility check — skip tickers that won't have
+    // price data on disk (unresolved, money-market, suffix-tagged holdings).
+    const eligible =
+      !unknown &&
+      stock.sector !== "Money Market" &&
+      !/\.[A-Z]+$/.test(stock.ticker);
+    if (!eligible) return;
+    let cancelled = false;
+    fetch(`/prices/${encodeURIComponent(stock.ticker)}.json`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((json) => {
+        if (cancelled || !json?.candles) return;
+        const m = new Map<string, Candle>();
+        for (const c of json.candles as Candle[]) m.set(c.time, c);
+        setPriceMap(m);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [stock]);
 
   const sortedTx = useMemo(() => {
     if (!stock) return [];
@@ -169,21 +197,22 @@ export default function Stock() {
           All transactions ({stock.transactions.length})
         </h2>
         <div className="overflow-x-auto overflow-y-auto max-h-[600px] border border-border -mx-3 sm:mx-0">
-          <table className="w-full text-sm min-w-[720px]">
+          <table className="w-full text-sm min-w-[820px] tabular-nums">
             <thead className="bg-panel2 sticky top-0">
               <tr className="text-xs uppercase tracking-wider text-muted">
                 <Th onClick={() => setSort("n")} active={sortKey === "n"} dir={sortDir}>#</Th>
                 <Th onClick={() => setSort("date")} active={sortKey === "date"} dir={sortDir}>Date</Th>
                 <Th onClick={() => setSort("type")} active={sortKey === "type"} dir={sortDir}>Type</Th>
-                <Th onClick={() => setSort("amount")} active={sortKey === "amount"} dir={sortDir}>Amount range</Th>
-                <Th onClick={() => setSort("mid")} active={sortKey === "mid"} dir={sortDir} className="text-right">Est. midpoint</Th>
+                <th className="text-right px-3 py-2 whitespace-nowrap" title="Daily close price on the transaction date">Est. price</th>
+                <Th onClick={() => setSort("mid")} active={sortKey === "mid"} dir={sortDir} className="text-right">Est. amount</Th>
+                <Th onClick={() => setSort("amount")} active={sortKey === "amount"} dir={sortDir} className="text-right">Amount range</Th>
                 <th className="text-left px-3 py-2">Raw description</th>
               </tr>
             </thead>
             <tbody>
               {sortedTx.map((t, i) => (
                 <tr key={i} className="border-t border-border hover:bg-panel2/60">
-                  <td className="px-3 py-2 font-mono text-muted tabular-nums">{t.n}</td>
+                  <td className="px-3 py-2 font-mono text-muted">{t.n}</td>
                   <td className="px-3 py-2 font-mono whitespace-nowrap">{t.date}</td>
                   <td className="px-3 py-2">
                     <span
@@ -197,8 +226,11 @@ export default function Stock() {
                       {t.type}
                     </span>
                   </td>
-                  <td className="px-3 py-2 whitespace-nowrap">{t.amount}</td>
+                  <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">
+                    <PriceCell candle={priceMap?.get(t.date) ?? null} />
+                  </td>
                   <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">{fmt$(t.mid)}</td>
+                  <td className="px-3 py-2 text-right tabular-nums whitespace-nowrap">{t.amount}</td>
                   <td className="px-3 py-2 text-muted text-xs truncate max-w-[420px]" title={t.rawDescription}>
                     {t.rawDescription}
                   </td>
@@ -209,6 +241,32 @@ export default function Stock() {
         </div>
       </section>
     </div>
+  );
+}
+
+function PriceCell({ candle }: { candle: Candle | null }) {
+  if (!candle) return <span className="text-muted">—</span>;
+  return (
+    <span className="relative inline-block group cursor-help">
+      <span className="group-hover:underline group-hover:decoration-dotted group-hover:decoration-muted/60 group-hover:underline-offset-[3px]">
+        {candle.close.toFixed(2)}
+      </span>
+      <span
+        role="tooltip"
+        className="hidden group-hover:block group-focus-within:block absolute right-full top-1/2 -translate-y-1/2 mr-2 z-30 bg-panel border border-ink shadow-lg px-2.5 py-1.5 text-[11px] text-ink whitespace-normal text-left pointer-events-none normal-case tracking-normal"
+      >
+        <div className="grid grid-cols-[auto_auto] gap-x-3 gap-y-0.5 font-mono tabular-nums">
+          <span className="text-muted">Open</span>
+          <span className="text-right">{candle.open.toFixed(2)}</span>
+          <span className="text-muted">High</span>
+          <span className="text-right">{candle.high.toFixed(2)}</span>
+          <span className="text-muted">Low</span>
+          <span className="text-right">{candle.low.toFixed(2)}</span>
+          <span className="text-muted">Close</span>
+          <span className="text-right">{candle.close.toFixed(2)}</span>
+        </div>
+      </span>
+    </span>
   );
 }
 

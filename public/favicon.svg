@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect width="32" height="32" rx="5" fill="#f7f2e7"/>
+  <rect x="0.5" y="0.5" width="31" height="31" rx="4.5" fill="none" stroke="#ddd2b0"/>
+  <!-- Up-day hollow candle (buy green) -->
+  <line x1="11" y1="5" x2="11" y2="27" stroke="#3a7a3a" stroke-width="1.6" stroke-linecap="round"/>
+  <rect x="7.5" y="11" width="7" height="13" fill="#f7f2e7" stroke="#3a7a3a" stroke-width="2"/>
+  <!-- Down-day filled candle (sell red) -->
+  <line x1="22" y1="8" x2="22" y2="28" stroke="#a52a2a" stroke-width="1.6" stroke-linecap="round"/>
+  <rect x="18.5" y="13" width="7" height="11" fill="#a52a2a"/>
+</svg>
