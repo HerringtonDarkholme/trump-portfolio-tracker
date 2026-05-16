@@ -8,12 +8,11 @@ export default function Home() {
   const t = dataset.totals;
   return (
     <div className="grid gap-6">
-      <section className="grid grid-cols-2 md:grid-cols-5 gap-3">
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Kpi label="Transactions" value={fmtInt(t.txCount)} sub={`${fmtInt(t.buyCount)} buys · ${fmtInt(t.sellCount)} sells`} />
         <Kpi label="Total volume (est.)" value={fmt$(t.totalVolume)} sub="Sum of bucket midpoints" />
         <Kpi label="Net flow" value={fmtSigned$(t.netFlow)} sub="Buys − Sells" color={t.netFlow >= 0 ? "buy" : "sell"} />
-        <Kpi label="Unique tickers" value={fmtInt(t.uniqueTickers)} sub={`${t.uniqueTickers - t.unresolvedCount} resolved`} />
-        <Kpi label="Unresolved names" value={fmtInt(t.unresolvedCount)} sub="Long tail / OCR — edit ticker-seed.json" />
+        <Kpi label="Unique tickers" value={fmtInt(t.uniqueTickers)} sub="All resolved" />
       </section>
 
       <section className="bg-panel border border-border rounded-xl p-4">

@@ -8,7 +8,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(__dirname, "..");
 const CSV_PATH = path.join(ROOT, "trump_278T.csv");
 const SEED_PATH = path.join(ROOT, "data", "ticker-seed.json");
-const DATE_FIX_PATH = path.join(ROOT, "data", "date-corrections.json");
 const OUT_DIR = path.join(ROOT, "src", "data");
 const OUT_PATH = path.join(OUT_DIR, "dataset.json");
 
@@ -36,8 +35,19 @@ function normalize(raw) {
   s = s.replace(/SOLICITED ORDER DISCRETION EXERCISED/g, " ");
   s = s.replace(/AVERAGE UNIT PRICE TRANSACTION/g, " ");
   s = s.replace(/YOUR BROKER ACTED AS AGENT/g, " ");
+  s = s.replace(/ALLOCATED ORDER/g, " ");
+  s = s.replace(/FORWARD SPLIT WITH STOCK SPLIT SHARES/g, " ");
+  s = s.replace(/MERGER ELECTION EXP:\s*\d{2}\/\d{2}\/\d{2}/g, " ");
+  s = s.replace(/\bWITH DUE BILLS\b/g, " ");
+  s = s.replace(/\bPAIRED CTF[^,]*$/g, " ");
+  s = s.replace(/\([^)]*\)/g, " ");  // strip parenthetical "(DELAWARE)" / "(HOLDING CO)"
+  s = s.replace(/\bEQUITY CLASS\s*$/g, " ");
   s = s.replace(/\bUNSOLICITED\b/g, " ");
-  s = s.replace(/\b\d{6,}[\d-]*\b/g, " ");
+  s = s.replace(/\bUSD\d*\.\d+\b/g, " ");  // share denomination like USD0.0001
+  s = s.replace(/\bUSD\b/g, " ");
+  // Trailing partial phrases from truncated descriptions.
+  s = s.replace(/\bYOUR BROKER\s*$/g, " ");
+  s = s.replace(/\b[A-Z]?\d{6,}[\d-]*\b/g, " ");
   s = s.replace(/\bPROCTOR\b/g, "PROCTER");
   s = s.replace(/\bWATCH GROUP\b/g, "MATCH GROUP");
   s = s.replace(/\bNFL BUSINESS MACH\b/g, "INTL BUSINESS MACH");
@@ -45,8 +55,10 @@ function normalize(raw) {
   s = s.replace(/\bMOBLIS\b/g, "MOELIS");
   // "NETFLIX COM INC" / "AMAZON COM INC" — strip internal COM so seed aliases hit.
   s = s.replace(/\bCOM\s+INC\b/g, "INC");
-  for (let i = 0; i < 5; i++) {
-    s = s.replace(/[\s,.]+(COM|CL\s+[ABC]|CLASS\s+[ABC]|SHS|REIT|NEW|INC NEW)$/, "");
+  // Collapse whitespace BEFORE trailing-suffix strip so the $ anchor works.
+  s = s.replace(/\s+/g, " ").trim().replace(/[,.\s]+$/, "").trim();
+  for (let i = 0; i < 7; i++) {
+    s = s.replace(/[\s,.]+(COM|CL\s+[ABC]|CLASS\s+[ABC]|SHS|REIT|NEW|INC NEW|DEL|F|CAP STK|EQUITY|EUR|ORD|ORD SHS|N V|NV|HLDGS|HOLDINGS)$/, "");
   }
   s = s.replace(/\s+/g, " ").trim().replace(/[,.\s]+$/, "").trim();
   return s;
@@ -66,11 +78,8 @@ function parseDate(s) {
   return Number.isNaN(+dt) || dt.getUTCMonth() !== m - 1 ? null : dt;
 }
 
-// --- Load seed + date corrections ------------------------------------------
+// --- Load seed --------------------------------------------------------------
 const seed = JSON.parse(fs.readFileSync(SEED_PATH, "utf8"));
-const dateFixes = JSON.parse(fs.readFileSync(DATE_FIX_PATH, "utf8"));
-delete dateFixes._comment;
-let dateFixesApplied = 0;
 
 // Build alias → ticker exact map, and the list for fuzzy matching.
 const aliasToTicker = new Map();
@@ -99,18 +108,7 @@ const unresolvedSet = new Set();
 for (const row of parsed.data) {
   const desc = row.Description?.trim();
   if (!desc || !row.Type || !row.Amount) continue;
-
-  // Apply manual date corrections (sourced from the original OGE PDF via vision).
-  const fixIso = dateFixes[row["#"]];
-  let date;
-  if (fixIso) {
-    const [y, m, d] = fixIso.split("-").map(Number);
-    date = new Date(Date.UTC(y, m - 1, d));
-    row.Date = `${m}/${d}/${y}`; // keep downstream string formatters happy
-    dateFixesApplied++;
-  } else {
-    date = parseDate(row.Date);
-  }
+  const date = parseDate(row.Date);
   if (!date) continue;
 
   const canonical = normalize(desc);
@@ -231,7 +229,6 @@ console.log(`  total volume (midpoint): $${totalVolume.toLocaleString()}`);
 console.log(`  net flow:                $${netFlow.toLocaleString()}`);
 console.log(`  unique tickers: ${totals.uniqueTickers} (${resolved} resolved, ${unresolvedSet.size} UNKN-*)`);
 console.log(`  fuzzy matches:  ${fuzzyAuditLog.length}`);
-console.log(`  date fixes applied: ${dateFixesApplied} / ${Object.keys(dateFixes).length} expected`);
 if (fuzzyAuditLog.length) {
   console.log("  sample fuzzy:");
   for (const f of fuzzyAuditLog.slice(0, 8)) {

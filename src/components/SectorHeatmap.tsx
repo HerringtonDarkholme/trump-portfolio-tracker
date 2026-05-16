@@ -13,12 +13,11 @@ type Branch = { kind: "branch"; sector: string; children: Node[] };
 type Root = { kind: "root"; children: Branch[] };
 type Node = Root | Branch | Leaf;
 
-function buildHierarchy(minVolume: number, showUnknown: boolean): Root {
+function buildHierarchy(minVolume: number): Root {
   const bySector: Record<string, Stock[]> = {};
   for (const s of Object.values(dataset.stocks)) {
     const vol = s.totalBuy + s.totalSell;
     if (vol < minVolume) continue;
-    if (!showUnknown && s.sector === "Unknown") continue;
     (bySector[s.sector] ??= []).push(s);
   }
   return {
@@ -41,13 +40,17 @@ function buildHierarchy(minVolume: number, showUnknown: boolean): Root {
 
 type Tooltip = { x: number; y: number; stock: Stock } | null;
 
+// Power scale for the min-volume slider: more granularity at low end where most stocks live.
+const SLIDER_MAX = 100;
+const sliderToVolume = (n: number) => Math.round(Math.pow(n / SLIDER_MAX, 2.4) * 5_000_000);
+
 export default function SectorHeatmap() {
-  const [showUnknown, setShowUnknown] = useState(false);
-  const [minVolume, setMinVolume] = useState(50000); // hide cells below $50k volume
+  const [sliderPos, setSliderPos] = useState(28); // ~$50k starting point
+  const minVolume = sliderToVolume(sliderPos);
   const [tip, setTip] = useState<Tooltip>(null);
   const navigate = useNavigate();
 
-  const root = useMemo(() => buildHierarchy(minVolume, showUnknown), [minVolume, showUnknown]);
+  const root = useMemo(() => buildHierarchy(minVolume), [minVolume]);
 
   const visibleSectors = root.children.length;
   const visibleStocks = root.children.reduce((sum, b) => sum + b.children.length, 0);
@@ -66,26 +69,19 @@ export default function SectorHeatmap() {
         </div>
         <div className="flex items-center gap-3 text-xs">
           <label className="flex items-center gap-2 text-muted">
+            <span className="whitespace-nowrap">Min volume:</span>
             <input
-              type="checkbox"
-              checked={showUnknown}
-              onChange={(e) => setShowUnknown(e.target.checked)}
+              type="range"
+              min={0}
+              max={SLIDER_MAX}
+              step={1}
+              value={sliderPos}
+              onChange={(e) => setSliderPos(Number(e.target.value))}
+              className="w-40 accent-accent"
             />
-            Show unknown sector
-          </label>
-          <label className="flex items-center gap-2 text-muted">
-            Min volume:
-            <select
-              className="bg-panel2 border border-border rounded px-2 py-1 text-white"
-              value={minVolume}
-              onChange={(e) => setMinVolume(Number(e.target.value))}
-            >
-              <option value={0}>$0</option>
-              <option value={50000}>$50K</option>
-              <option value={250000}>$250K</option>
-              <option value={1000000}>$1M</option>
-              <option value={5000000}>$5M</option>
-            </select>
+            <span className="text-white tabular-nums min-w-[60px] text-right">
+              {fmt$(minVolume)}
+            </span>
           </label>
         </div>
       </div>
