@@ -267,14 +267,25 @@ function HeatmapSvg({
                   const showTicker = w > 40 && h > 20;
                   const showVol = w > 86 && h > 42;
                   const showNet = showVol && h > 60;
-                  const lines: { text: string; fontSize: number; weight: number; opacity: number }[] = [];
-                  if (showTicker) lines.push({ text: s.ticker, fontSize: 12, weight: 700, opacity: 1 });
-                  if (showVol) lines.push({ text: fmt$(totalVol), fontSize: 11, weight: 400, opacity: 0.85 });
-                  if (showNet) lines.push({ text: (s.net >= 0 ? "+" : "") + fmt$(s.net), fontSize: 11, weight: 400, opacity: 0.85 });
-                  const LH = 14;
-                  const block = lines.length * LH;
-                  const startY = (h - block) / 2 + LH * 0.78; // baseline of first line
+
+                  // Ticker scales gently with area: a ~150×80 tile stays near 12px,
+                  // MSFT-sized tiles grow to about 20px. Width safeguard keeps long
+                  // tickers like GOOGL from spilling.
+                  const SUB_SIZE = 11;
+                  const area = w * h;
+                  const baseSize = 12 + Math.min(10, Math.max(0, (Math.sqrt(area) - 100) * 0.10));
+                  const maxByW = (w - 10) / Math.max(2, s.ticker.length * 0.7);
+                  const tickerSize = Math.max(11, Math.min(baseSize, maxByW));
+
+                  const lines: { text: string; size: number; weight: number; opacity: number }[] = [];
+                  if (showTicker) lines.push({ text: s.ticker, size: tickerSize, weight: 700, opacity: 1 });
+                  if (showVol)    lines.push({ text: fmt$(totalVol), size: SUB_SIZE, weight: 400, opacity: 0.85 });
+                  if (showNet)    lines.push({ text: (s.net >= 0 ? "+" : "") + fmt$(s.net), size: SUB_SIZE, weight: 400, opacity: 0.85 });
+
+                  const gap = 3;
+                  const blockH = lines.reduce((sum, l) => sum + l.size, 0) + gap * Math.max(0, lines.length - 1);
                   const cx = w / 2;
+                  let cursorY = (h - blockH) / 2;
                   return (
                     <g
                       key={`l-${s.ticker}`}
@@ -302,21 +313,25 @@ function HeatmapSvg({
                         stroke="#fdfaf0"
                         strokeWidth={1}
                       />
-                      {lines.map((ln, idx) => (
-                        <text
-                          key={idx}
-                          x={cx}
-                          y={startY + idx * LH}
-                          fontSize={ln.fontSize}
-                          fontWeight={ln.weight}
-                          fill={txt}
-                          opacity={ln.opacity}
-                          textAnchor="middle"
-                          style={{ pointerEvents: "none" }}
-                        >
-                          {ln.text}
-                        </text>
-                      ))}
+                      {lines.map((ln, idx) => {
+                        const baseline = cursorY + ln.size * 0.78;
+                        cursorY += ln.size + gap;
+                        return (
+                          <text
+                            key={idx}
+                            x={cx}
+                            y={baseline}
+                            fontSize={ln.size}
+                            fontWeight={ln.weight}
+                            fill={txt}
+                            opacity={ln.opacity}
+                            textAnchor="middle"
+                            style={{ pointerEvents: "none" }}
+                          >
+                            {ln.text}
+                          </text>
+                        );
+                      })}
                     </g>
                   );
                 }
