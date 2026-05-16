@@ -163,6 +163,7 @@ for (const row of parsed.data) {
 
   const { low, high } = bounds(row.Amount);
   s.transactions.push({
+    n: Number(row["#"]) || 0,
     date: isoDate,
     type,
     amount: row.Amount,

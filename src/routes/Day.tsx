@@ -4,9 +4,10 @@ import { dataset } from "../lib/dataset";
 import { fmt$, fmtSigned$, fmtInt } from "../lib/format";
 import SectorHeatmap from "../components/SectorHeatmap";
 
-type SortKey = "ticker" | "sector" | "type" | "amount" | "mid";
+type SortKey = "n" | "ticker" | "sector" | "type" | "amount" | "mid";
 
 type Row = {
+  n: number;
   ticker: string;
   stockName: string;
   sector: string;
@@ -25,6 +26,7 @@ export default function Day() {
       for (const t of s.transactions) {
         if (t.date !== date) continue;
         rows.push({
+          n: t.n,
           ticker: s.ticker,
           stockName: s.name,
           sector: s.sector,
@@ -124,6 +126,7 @@ export default function Day() {
           <table className="w-full text-sm">
             <thead className="bg-panel2 sticky top-0">
               <tr className="text-xs uppercase tracking-wider text-muted">
+                <Th onClick={() => setSort("n")} active={sortKey === "n"} dir={sortDir}>#</Th>
                 <Th onClick={() => setSort("ticker")} active={sortKey === "ticker"} dir={sortDir}>Ticker</Th>
                 <th className="text-left px-3 py-2">Name</th>
                 <Th onClick={() => setSort("sector")} active={sortKey === "sector"} dir={sortDir}>Sector</Th>
@@ -135,6 +138,7 @@ export default function Day() {
             <tbody>
               {sortedTx.map((t, i) => (
                 <tr key={i} className="border-t border-border hover:bg-panel2/60">
+                  <td className="px-3 py-2 font-mono text-muted tabular-nums">{t.n}</td>
                   <td className="px-3 py-2 font-mono">
                     <Link to={`/stock/${encodeURIComponent(t.ticker)}`} className="text-accent hover:underline">
                       {t.ticker}

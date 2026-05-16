@@ -4,7 +4,7 @@ import { dataset } from "../lib/dataset";
 import { fmt$, fmtSigned$ } from "../lib/format";
 import StockMonthlyChart from "../components/StockMonthlyChart";
 
-type SortKey = "date" | "type" | "amount" | "mid";
+type SortKey = "n" | "date" | "type" | "amount" | "mid";
 
 export default function Stock() {
   const { ticker = "" } = useParams();
@@ -73,7 +73,7 @@ export default function Stock() {
           </div>
         )}
 
-        <div className="mt-4 grid grid-cols-2 md:grid-cols-5 gap-3">
+        <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3">
           <Mini label="Total purchased" value={fmt$(stock.totalBuy)} color="buy" />
           <Mini label="Total sold"      value={fmt$(stock.totalSell)} color="sell" />
           <Mini
@@ -82,7 +82,6 @@ export default function Stock() {
             color={stock.net >= 0 ? "buy" : "sell"}
           />
           <Mini label="Transactions" value={String(stock.txCount)} />
-          <Mini label="Active range" value={`${stock.firstDate} → ${stock.lastDate}`} />
         </div>
       </header>
 
@@ -101,6 +100,7 @@ export default function Stock() {
           <table className="w-full text-sm">
             <thead className="bg-panel2 sticky top-0">
               <tr className="text-xs uppercase tracking-wider text-muted">
+                <Th onClick={() => setSort("n")} active={sortKey === "n"} dir={sortDir}>#</Th>
                 <Th onClick={() => setSort("date")} active={sortKey === "date"} dir={sortDir}>Date</Th>
                 <Th onClick={() => setSort("type")} active={sortKey === "type"} dir={sortDir}>Type</Th>
                 <Th onClick={() => setSort("amount")} active={sortKey === "amount"} dir={sortDir}>Amount range</Th>
@@ -111,6 +111,7 @@ export default function Stock() {
             <tbody>
               {sortedTx.map((t, i) => (
                 <tr key={i} className="border-t border-border hover:bg-panel2/60">
+                  <td className="px-3 py-2 font-mono text-muted tabular-nums">{t.n}</td>
                   <td className="px-3 py-2 font-mono">{t.date}</td>
                   <td className="px-3 py-2">
                     <span

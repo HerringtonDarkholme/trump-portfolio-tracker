@@ -1,4 +1,5 @@
 export type Transaction = {
+  n: number;
   date: string;
   type: "purchase" | "sale";
   amount: string;
