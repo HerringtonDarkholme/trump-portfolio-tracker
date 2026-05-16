@@ -121,7 +121,7 @@ export default function SiteSearch() {
           className="w-full bg-panel2 border border-border rounded-md pl-8 pr-8 sm:pr-9 py-1.5 text-sm text-ink placeholder-muted focus:outline-none focus:border-accent"
         />
         <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-muted text-xs pointer-events-none">⌕</span>
-        <kbd className="hidden sm:inline absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
+        <kbd className="hidden sm:inline absolute right-2 top-1/2 -translate-y-1/2 text-[11px] text-muted bg-bg border border-border rounded px-1.5 py-0.5 pointer-events-none">/</kbd>
       </div>
 
       {open && query && (
@@ -142,7 +142,7 @@ export default function SiteSearch() {
                           <div className="font-mono text-accent text-sm">{h.ticker}</div>
                           <div className="text-xs text-muted truncate">{h.name}</div>
                         </div>
-                        <span className="text-[10px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border whitespace-nowrap">
+                        <span className="text-[11px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border whitespace-nowrap">
                           {h.sector}
                         </span>
                       </>
@@ -152,7 +152,7 @@ export default function SiteSearch() {
                           <div className="text-sm text-ink">{h.sector}</div>
                           <div className="text-xs text-muted">{h.tickerCount} tickers</div>
                         </div>
-                        <span className="text-[10px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border">
+                        <span className="text-[11px] text-muted px-1.5 py-0.5 rounded bg-panel2 border border-border">
                           sector
                         </span>
                       </>
@@ -162,7 +162,7 @@ export default function SiteSearch() {
               })}
             </ul>
           )}
-          <div className="border-t border-border px-3 py-1.5 text-[10px] text-muted flex justify-between">
+          <div className="border-t border-border px-3 py-1.5 text-[11px] text-muted flex justify-between">
             <span>↑↓ navigate · ↵ open · esc close</span>
             <span>{hits.length} match{hits.length === 1 ? "" : "es"}</span>
           </div>

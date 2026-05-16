@@ -96,13 +96,13 @@ export default function SectorHeatmap({
           <h2 className="font-serif text-xl sm:text-2xl text-ink">
             Sector Heatmap
           </h2>
-          <div className="text-[10px] sm:text-[11px] tracking-[0.1em] uppercase text-muted mt-1">
+          <div className="text-[11px] sm:text-xs tracking-[0.1em] uppercase text-muted mt-1">
             {visibleStocks} stocks · {visibleSectors} sectors · cell = volume · color = net
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 text-xs w-full sm:w-auto">
           <label className="flex items-center gap-2 text-muted w-full sm:w-auto">
-            <span className="whitespace-nowrap text-[10px] tracking-[0.15em] uppercase">Min vol:</span>
+            <span className="whitespace-nowrap text-[11px] tracking-[0.15em] uppercase">Min vol:</span>
             <input
               type="range"
               min={0}
@@ -155,9 +155,9 @@ export default function SectorHeatmap({
           >
             <div className="font-semibold text-ink">
               {tip.stock.ticker}{" "}
-              <span className="font-normal text-muted text-[10px] tracking-wider uppercase">· {tip.stock.sector}</span>
+              <span className="font-normal text-muted text-[11px] tracking-wider uppercase">· {tip.stock.sector}</span>
             </div>
-            <div className="text-muted truncate text-[11px]">{tip.stock.name}</div>
+            <div className="text-muted truncate text-xs">{tip.stock.name}</div>
             <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5">
               <span className="text-muted">Buy:</span>
               <span className="text-buy text-right tabular-nums">{fmt$(tip.stock.totalBuy)}</span>
@@ -172,7 +172,7 @@ export default function SectorHeatmap({
               <span className="text-muted"># tx:</span>
               <span className="text-right tabular-nums">{tip.stock.txCount}</span>
             </div>
-            <div className="text-muted mt-1 text-[9px] tracking-wider uppercase">Click for details</div>
+            <div className="text-muted mt-1 text-[11px] tracking-wider uppercase">Click for details</div>
           </div>
           );
         })()}
@@ -212,7 +212,7 @@ function HeatmapSvg({
         size={[width, height]}
         tile={treemapSquarify}
         round
-        paddingTop={(n: any) => (n.depth === 1 ? 20 : 0)}
+        paddingTop={(n: any) => (n.depth === 1 ? 22 : 0)}
         paddingInner={2}
         paddingOuter={2}
       >
@@ -227,9 +227,9 @@ function HeatmapSvg({
                 const data = n.data;
                 if (data.kind === "branch") {
                   const label = data.sector.toUpperCase();
-                  // Each char ~6.6px at 10px font + 0.12em letter-spacing.
+                  // Each char ~7.4px at 11px font + 0.12em letter-spacing.
                   // Padding 12px (6 left + 6 right). Use min(...) to clip.
-                  const maxChars = Math.max(0, Math.floor((w - 12) / 6.6));
+                  const maxChars = Math.max(0, Math.floor((w - 12) / 7.4));
                   const display = label.length > maxChars
                     ? (maxChars > 1 ? label.slice(0, maxChars - 1) + "…" : "")
                     : label;
@@ -245,8 +245,8 @@ function HeatmapSvg({
                       {display && (
                         <text
                           x={6}
-                          y={14}
-                          fontSize={10}
+                          y={15}
+                          fontSize={11}
                           fontWeight={600}
                           fill="#a88a4d"
                           style={{ cursor: "pointer", letterSpacing: "0.12em" }}
@@ -264,8 +264,8 @@ function HeatmapSvg({
                   const totalVol = s.totalBuy + s.totalSell;
                   const fill = netFlowColor(s.net, totalVol);
                   const txt = netFlowTextColor(s.net, totalVol);
-                  const showTicker = w > 36 && h > 18;
-                  const showVol = w > 80 && h > 38;
+                  const showTicker = w > 40 && h > 20;
+                  const showVol = w > 86 && h > 42;
                   return (
                     <g
                       key={`l-${s.ticker}`}
@@ -296,8 +296,8 @@ function HeatmapSvg({
                       {showTicker && (
                         <text
                           x={4}
-                          y={14}
-                          fontSize={11}
+                          y={15}
+                          fontSize={12}
                           fontWeight={700}
                           fill={txt}
                           style={{ pointerEvents: "none" }}
@@ -308,8 +308,8 @@ function HeatmapSvg({
                       {showVol && (
                         <text
                           x={4}
-                          y={28}
-                          fontSize={10}
+                          y={30}
+                          fontSize={11}
                           fill={txt}
                           opacity={0.85}
                           style={{ pointerEvents: "none" }}
@@ -317,11 +317,11 @@ function HeatmapSvg({
                           {fmt$(totalVol)}
                         </text>
                       )}
-                      {showVol && h > 54 && (
+                      {showVol && h > 58 && (
                         <text
                           x={4}
-                          y={42}
-                          fontSize={10}
+                          y={45}
+                          fontSize={11}
                           fill={txt}
                           opacity={0.85}
                           style={{ pointerEvents: "none" }}

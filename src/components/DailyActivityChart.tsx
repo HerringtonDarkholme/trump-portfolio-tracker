@@ -97,12 +97,12 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
   return (
     <>
       <div className="flex items-center justify-end gap-2 mb-2 -mt-1 flex-wrap">
-        <span className="text-[10px] tracking-[0.15em] uppercase text-muted">View:</span>
+        <span className="text-[11px] tracking-[0.15em] uppercase text-muted">View:</span>
         <div className="inline-flex overflow-hidden border border-ink">
           <button
             onClick={() => setMode("bs")}
             className={
-              "px-2.5 sm:px-3 py-1 text-[10px] tracking-[0.12em] uppercase " +
+              "px-2.5 sm:px-3 py-1 text-[11px] tracking-[0.12em] uppercase " +
               (mode === "bs"
                 ? "bg-ink text-bg"
                 : "bg-bg text-ink hover:bg-panel2")
@@ -113,7 +113,7 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
           <button
             onClick={() => setMode("net")}
             className={
-              "px-2.5 sm:px-3 py-1 text-[10px] tracking-[0.12em] uppercase border-l border-ink " +
+              "px-2.5 sm:px-3 py-1 text-[11px] tracking-[0.12em] uppercase border-l border-ink " +
               (mode === "net"
                 ? "bg-ink text-bg"
                 : "bg-bg text-ink hover:bg-panel2")
@@ -142,14 +142,14 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
             <XAxis
               dataKey="date"
               stroke="#6b6b62"
-              tick={{ fontSize: 10 }}
+              tick={{ fontSize: 11 }}
               interval="preserveStartEnd"
               minTickGap={56}
               tickFormatter={(v) => v.slice(5)}
             />
             <YAxis
               stroke="#6b6b62"
-              tick={{ fontSize: 10 }}
+              tick={{ fontSize: 11 }}
               width={64}
               tickFormatter={(v) => {
                 const n = Number(v);
@@ -178,7 +178,7 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
               content={() => (
                 <div style={{
                   display: "flex", gap: 20, justifyContent: "center",
-                  fontSize: 10, color: "#6b6b62", paddingTop: 8,
+                  fontSize: 11, color: "#6b6b62", paddingTop: 8,
                   letterSpacing: "0.12em", textTransform: "uppercase",
                 }}>
                   {mode === "bs" ? (

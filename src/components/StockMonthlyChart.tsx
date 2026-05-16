@@ -66,14 +66,14 @@ export default function StockMonthlyChart({ transactions }: { transactions: Tran
           <XAxis
             dataKey="date"
             stroke="#6b6b62"
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 11 }}
             interval="preserveStartEnd"
             minTickGap={36}
             tickFormatter={(v) => v.slice(5)}
           />
           <YAxis
             stroke="#6b6b62"
-            tick={{ fontSize: 10 }}
+            tick={{ fontSize: 11 }}
             width={64}
             tickFormatter={(v) => {
               const n = Number(v);

@@ -92,7 +92,7 @@ export default function Sector() {
   }
 
   return (
-    <div className="grid gap-4 sm:gap-6">
+    <div className="grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)]">
       <nav className="text-xs text-muted truncate">
         <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>
@@ -170,11 +170,11 @@ export default function Sector() {
 function Mini({ label, value, sub, color }: { label: string; value: string; sub?: string; color?: "buy" | "sell" }) {
   return (
     <div className="bg-bg border border-border p-2 sm:p-3 relative min-w-0">
-      <div className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
+      <div className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
       <div className={"mt-1 text-base sm:text-lg font-semibold break-all leading-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
         {value}
       </div>
-      {sub && <div className="text-[9px] sm:text-[10px] text-muted mt-0.5 truncate">{sub}</div>}
+      {sub && <div className="text-[11px] sm:text-[11px] text-muted mt-0.5 truncate">{sub}</div>}
     </div>
   );
 }
@@ -185,7 +185,7 @@ function Th({ children, onClick, active, dir, className = "" }: {
   return (
     <th onClick={onClick} className={"text-left px-3 py-2 cursor-pointer select-none hover:text-accent2 " + className}>
       {children}
-      {active && <span className="ml-1 text-[10px]">{dir === 1 ? "▲" : "▼"}</span>}
+      {active && <span className="ml-1 text-[11px]">{dir === 1 ? "▲" : "▼"}</span>}
     </th>
   );
 }

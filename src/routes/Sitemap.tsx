@@ -29,7 +29,7 @@ export default function Sitemap() {
   const totalStocks = Object.keys(dataset.stocks).length;
 
   return (
-    <div className="grid gap-4 sm:gap-6">
+    <div className="grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)]">
       <nav className="text-xs text-muted truncate">
         <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>

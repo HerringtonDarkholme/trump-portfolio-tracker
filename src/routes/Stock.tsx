@@ -43,7 +43,7 @@ export default function Stock() {
   }
 
   return (
-    <div className="grid gap-4 sm:gap-6">
+    <div className="grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)]">
       <nav className="text-xs text-muted truncate">
         <Link to="/" className="hover:text-accent2">Home</Link>
         <span className="mx-1.5">/</span>
@@ -58,11 +58,11 @@ export default function Stock() {
         <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
           <h1 className="font-serif text-2xl sm:text-3xl text-ink break-words">{stock.name}</h1>
           <span className="font-mono text-accent2 text-base sm:text-lg">{stock.ticker}</span>
-          <span className="text-[10px] tracking-[0.12em] uppercase px-2 py-0.5 bg-panel2 border border-border text-muted">
+          <span className="text-[11px] tracking-[0.12em] uppercase px-2 py-0.5 bg-panel2 border border-border text-muted">
             {stock.sector}
           </span>
           {stock.resolution === "fuzzy" && (
-            <span className="text-[10px] tracking-[0.1em] uppercase px-2 py-0.5 bg-accent/15 text-accent2 border border-accent2">
+            <span className="text-[11px] tracking-[0.1em] uppercase px-2 py-0.5 bg-accent/15 text-accent2 border border-accent2">
               Fuzzy Matched
             </span>
           )}
@@ -151,7 +151,7 @@ function Mini({
 }) {
   return (
     <div className="bg-bg border border-border p-2 sm:p-3 relative min-w-0">
-      <div className="text-[9px] sm:text-[10px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
+      <div className="text-[11px] sm:text-[11px] font-semibold uppercase tracking-wider text-muted truncate">{label}</div>
       <div className={"mt-1 text-base sm:text-lg font-semibold break-all leading-tight " + (color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink")}>
         {value}
       </div>
@@ -178,7 +178,7 @@ function Th({
       className={"text-left px-3 py-2 cursor-pointer select-none hover:text-accent2 " + className}
     >
       {children}
-      {active && <span className="ml-1 text-[10px]">{dir === 1 ? "▲" : "▼"}</span>}
+      {active && <span className="ml-1 text-[11px]">{dir === 1 ? "▲" : "▼"}</span>}
     </th>
   );
 }
