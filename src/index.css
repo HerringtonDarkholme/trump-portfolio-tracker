@@ -4,6 +4,28 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Breathing halo on the >$10M tier badges in the MarketChart. */
+@keyframes badgeHaloPulse {
+  0%, 100% {
+    box-shadow:
+      0 0 0 1.5px #d1b371,
+      0 0 0 4px rgba(209, 179, 113, 0.4),
+      0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow:
+      0 0 0 1.5px #d1b371,
+      0 0 0 9px rgba(209, 179, 113, 0.18),
+      0 1px 2px rgba(0, 0, 0, 0.2);
+  }
+}
+.badge-halo-pulse {
+  animation: badgeHaloPulse 2.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .badge-halo-pulse { animation: none; }
+}
+
 @layer base {
   html, body, #root { height: 100%; }
   html {

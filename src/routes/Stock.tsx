@@ -3,6 +3,8 @@ import { Link, useParams } from "react-router-dom";
 import { dataset } from "../lib/dataset";
 import { fmt$ } from "../lib/format";
 import StockMonthlyChart from "../components/StockMonthlyChart";
+import MarketChart, { MarketChartLegend } from "../components/MarketChart";
+import CompanyLogo from "../components/CompanyLogo";
 import { KpiInt, KpiDollar } from "../components/Kpi";
 
 type SortKey = "n" | "date" | "type" | "amount" | "mid";
@@ -37,6 +39,13 @@ export default function Stock() {
   }
 
   const unknown = stock.ticker.startsWith("UNKN-");
+  // Only assets that trade on an exchange will resolve in TradingView. Skip
+  // for unresolved tickers, money-market funds, and anything ending in .HA
+  // (heuristic for non-exchange-traded holdings).
+  const showMarketChart =
+    !unknown &&
+    stock.sector !== "Money Market" &&
+    !/\.[A-Z]+$/.test(stock.ticker);
 
   function setSort(k: SortKey) {
     if (k === sortKey) setSortDir((d) => (d === 1 ? -1 : 1));
@@ -56,17 +65,27 @@ export default function Stock() {
       </nav>
 
       <header className="bg-panel border border-border p-3 sm:p-5">
-        <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap">
-          <h1 className="font-serif text-2xl sm:text-3xl text-ink break-words">{stock.name}</h1>
-          <span className="font-mono text-accent2 text-base sm:text-lg">{stock.ticker}</span>
-          <span className="text-[11px] tracking-[0.12em] uppercase px-2 py-0.5 bg-panel2 border border-border text-muted">
-            {stock.sector}
-          </span>
-          {stock.resolution === "fuzzy" && (
-            <span className="text-[11px] tracking-[0.1em] uppercase px-2 py-0.5 bg-accent/15 text-accent2 border border-accent2">
-              Fuzzy Matched
-            </span>
-          )}
+        <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+          <CompanyLogo
+            ticker={stock.ticker}
+            alt={`${stock.name} logo`}
+            className="w-11 h-11 sm:w-14 sm:h-14 object-contain bg-bg rounded-sm border border-border p-1 shrink-0"
+          />
+          <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap min-w-0">
+            <h1 className="font-serif text-2xl sm:text-3xl text-ink break-words">{stock.name}</h1>
+            <span className="font-mono text-accent2 text-base sm:text-lg">{stock.ticker}</span>
+            <Link
+              to={`/sector/${encodeURIComponent(stock.sector)}`}
+              className="text-[11px] tracking-[0.12em] uppercase px-2 py-0.5 bg-panel2 border border-border text-muted hover:text-accent2 hover:border-accent2"
+            >
+              {stock.sector}
+            </Link>
+            {stock.resolution === "fuzzy" && (
+              <span className="text-[11px] tracking-[0.1em] uppercase px-2 py-0.5 bg-accent/15 text-accent2 border border-accent2">
+                Fuzzy Matched
+              </span>
+            )}
+          </div>
         </div>
         {unknown && (
           <div className="mt-2 text-xs text-accent2">
@@ -88,6 +107,44 @@ export default function Stock() {
         </h2>
         <StockMonthlyChart transactions={stock.transactions} />
       </section>
+
+      {showMarketChart && (
+        <section className="bg-panel border border-border p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+            <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted">
+              Market chart · with transactions
+            </h2>
+            <div className="flex items-center gap-3 text-[11px] tracking-[0.12em] uppercase text-muted flex-wrap">
+              <span className="inline-flex items-center gap-1">
+                <span className="inline-block w-0 h-0 border-l-[5px] border-r-[5px] border-b-[7px] border-l-transparent border-r-transparent border-b-buy" />
+                Buy
+              </span>
+              <span className="inline-flex items-center gap-1">
+                <span className="inline-block w-0 h-0 border-l-[5px] border-r-[5px] border-t-[7px] border-l-transparent border-r-transparent border-t-sell" />
+                Sell
+              </span>
+              <span className="text-border">·</span>
+              <span className="whitespace-nowrap">
+                Daily price with transactions · via{" "}
+                <a
+                  href={`https://finance.yahoo.com/quote/${encodeURIComponent(stock.ticker)}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="text-accent2 hover:text-ink underline underline-offset-2 decoration-border hover:decoration-accent2"
+                >
+                  Yahoo ↗
+                </a>
+              </span>
+            </div>
+          </div>
+          <div className="h-[420px] sm:h-[520px] border border-border bg-bg">
+            <MarketChart symbol={stock.ticker} name={stock.name} transactions={stock.transactions} />
+          </div>
+          <div className="mt-1">
+            <MarketChartLegend />
+          </div>
+        </section>
+      )}
 
       <section className="bg-panel border border-border p-3 sm:p-4">
         <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted mb-3">
