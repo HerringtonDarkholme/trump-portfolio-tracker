@@ -13,13 +13,35 @@ type Branch = { kind: "branch"; sector: string; children: Node[] };
 type Root = { kind: "root"; children: Branch[] };
 type Node = Root | Branch | Leaf;
 
-function buildHierarchy(minVolume: number, sectorFilter?: string): Root {
+function buildHierarchy(minVolume: number, sectorFilter?: string, dayFilter?: string): Root {
   const bySector: Record<string, Stock[]> = {};
   for (const s of Object.values(dataset.stocks)) {
     if (sectorFilter && s.sector !== sectorFilter) continue;
-    const vol = s.totalBuy + s.totalSell;
+    let stock: Stock = s;
+    if (dayFilter) {
+      // Re-aggregate this stock using only transactions on the target day.
+      let dayBuy = 0, daySell = 0, dayTx = 0;
+      const dayTransactions = [];
+      for (const t of s.transactions) {
+        if (t.date !== dayFilter) continue;
+        if (t.type === "purchase") dayBuy += t.mid;
+        else daySell += t.mid;
+        dayTx++;
+        dayTransactions.push(t);
+      }
+      if (dayTx === 0) continue;
+      stock = {
+        ...s,
+        totalBuy: dayBuy,
+        totalSell: daySell,
+        net: dayBuy - daySell,
+        txCount: dayTx,
+        transactions: dayTransactions,
+      };
+    }
+    const vol = stock.totalBuy + stock.totalSell;
     if (vol < minVolume) continue;
-    (bySector[s.sector] ??= []).push(s);
+    (bySector[stock.sector] ??= []).push(stock);
   }
   return {
     kind: "root",
@@ -45,13 +67,24 @@ type Tooltip = { x: number; y: number; stock: Stock } | null;
 const SLIDER_MAX = 100;
 const sliderToVolume = (n: number) => Math.round(Math.pow(n / SLIDER_MAX, 2.4) * 5_000_000);
 
-export default function SectorHeatmap({ sectorFilter, height = 620 }: { sectorFilter?: string; height?: number }) {
-  const [sliderPos, setSliderPos] = useState(sectorFilter ? 0 : 28);
+export default function SectorHeatmap({
+  sectorFilter,
+  dayFilter,
+  height = 620,
+}: {
+  sectorFilter?: string;
+  dayFilter?: string;
+  height?: number;
+}) {
+  const [sliderPos, setSliderPos] = useState(sectorFilter || dayFilter ? 0 : 28);
   const minVolume = sliderToVolume(sliderPos);
   const [tip, setTip] = useState<Tooltip>(null);
   const navigate = useNavigate();
 
-  const root = useMemo(() => buildHierarchy(minVolume, sectorFilter), [minVolume, sectorFilter]);
+  const root = useMemo(
+    () => buildHierarchy(minVolume, sectorFilter, dayFilter),
+    [minVolume, sectorFilter, dayFilter]
+  );
 
   const visibleSectors = root.children.length;
   const visibleStocks = root.children.reduce((sum, b) => sum + b.children.length, 0);

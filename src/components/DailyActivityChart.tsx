@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   ResponsiveContainer, ComposedChart, Line, Area, XAxis, YAxis, Tooltip,
   CartesianGrid, ReferenceLine, Legend,
@@ -31,6 +32,7 @@ function addDay(iso: string): string {
 
 export default function DailyActivityChart({ sector }: { sector?: string }) {
   const [mode, setMode] = useState<Mode>("bs");
+  const navigate = useNavigate();
 
   const data = useMemo<Row[]>(() => {
     const byDay: Record<
@@ -124,7 +126,18 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
 
       <div style={{ width: "100%", height: 320 }}>
         <ResponsiveContainer>
-          <ComposedChart data={data} margin={{ top: 10, right: 16, bottom: 4, left: 4 }}>
+          <ComposedChart
+            data={data}
+            margin={{ top: 10, right: 16, bottom: 4, left: 4 }}
+            onClick={(e: { activeLabel?: string; activePayload?: Array<{ payload: Row }> }) => {
+              const date = e?.activeLabel;
+              const row = e?.activePayload?.[0]?.payload;
+              if (date && row && (row.buyCount + row.sellCount) > 0) {
+                navigate(`/day/${date}`);
+              }
+            }}
+            style={{ cursor: "pointer" }}
+          >
             <CartesianGrid stroke="rgba(255,255,255,0.06)" vertical={false} />
             <XAxis
               dataKey="date"

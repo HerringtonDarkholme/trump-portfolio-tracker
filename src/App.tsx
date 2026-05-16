@@ -2,6 +2,7 @@ import { Routes, Route, Link } from "react-router-dom";
 import Home from "./routes/Home";
 import Stock from "./routes/Stock";
 import Sector from "./routes/Sector";
+import Day from "./routes/Day";
 import SiteSearch from "./components/SiteSearch";
 
 export default function App() {
@@ -25,8 +26,14 @@ export default function App() {
           <Route path="/" element={<Home />} />
           <Route path="/stock/:ticker" element={<Stock />} />
           <Route path="/sector/:sector" element={<Sector />} />
+          <Route path="/day/:date" element={<Day />} />
         </Routes>
       </main>
+      <footer className="border-t border-border mt-8">
+        <div className="max-w-[1400px] mx-auto px-6 py-4 text-[11px] text-muted">
+          Based on public OGE filings. Recreational project, not financial advice.
+        </div>
+      </footer>
     </div>
   );
 }
