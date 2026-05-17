@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import { dataset } from "../lib/dataset";
 import { fmt$, fmtSigned$ } from "../lib/format";
@@ -28,6 +29,51 @@ export default function Stock() {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
   const [priceMap, setPriceMap] = useState<Map<string, Candle> | null>(null);
+
+  // Sticky condensed bar appears once the market-chart section (and the
+  // company logo it carries) scrolls behind the site header.
+  const chartSectionRef = useRef<HTMLElement>(null);
+  const [stickyBarVisible, setStickyBarVisible] = useState(false);
+  const [headerHeight, setHeaderHeight] = useState(0);
+
+  useEffect(() => {
+    function measure() {
+      const header = document.querySelector("header");
+      setHeaderHeight(header?.getBoundingClientRect().height ?? 0);
+    }
+    measure();
+    window.addEventListener("resize", measure);
+    return () => window.removeEventListener("resize", measure);
+  }, []);
+
+  useEffect(() => {
+    let raf: number | null = null;
+    function check() {
+      raf = null;
+      const el = chartSectionRef.current;
+      if (!el) {
+        setStickyBarVisible(false);
+        return;
+      }
+      const rect = el.getBoundingClientRect();
+      const header = document.querySelector("header");
+      const hh = header?.getBoundingClientRect().height ?? 0;
+      // Once the section's top has crossed the site-header bottom, the chart
+      // logo is hidden — that's our cue.
+      setStickyBarVisible(rect.top < hh);
+    }
+    function onScroll() {
+      if (raf == null) raf = requestAnimationFrame(check);
+    }
+    check();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      if (raf != null) cancelAnimationFrame(raf);
+    };
+  }, [stock]);
 
   useEffect(() => {
     setPriceMap(null);
@@ -191,16 +237,6 @@ export default function Stock() {
 
   return (
     <div className="grid gap-4 sm:gap-6 grid-cols-[minmax(0,1fr)]">
-      <nav className="text-xs text-muted truncate">
-        <Link to="/" className="hover:text-accent2">Home</Link>
-        <span className="mx-1.5">/</span>
-        <Link to={`/sector/${encodeURIComponent(stock.sector)}`} className="hover:text-accent">
-          {stock.sector}
-        </Link>
-        <span className="mx-1.5">/</span>
-        <span className="text-ink font-mono">{stock.ticker}</span>
-      </nav>
-
       <header className="bg-panel border border-border p-3 sm:p-5">
         <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
           <CompanyLogo
@@ -210,19 +246,49 @@ export default function Stock() {
           />
           <div className="flex items-baseline gap-2 sm:gap-3 flex-wrap min-w-0">
             <h1 className="font-serif text-2xl sm:text-3xl text-ink break-words">{stock.name}</h1>
-            <span className="font-mono text-accent2 text-base sm:text-lg">{stock.ticker}</span>
-            <Link
-              to={`/sector/${encodeURIComponent(stock.sector)}`}
-              className="text-[11px] tracking-[0.12em] uppercase px-2 py-0.5 bg-panel2 border border-border text-muted hover:text-accent2 hover:border-accent2"
-            >
-              {stock.sector}
-            </Link>
             {stock.resolution === "fuzzy" && (
               <span className="text-[11px] tracking-[0.1em] uppercase px-2 py-0.5 bg-accent/15 text-accent2 border border-accent2">
                 Fuzzy Matched
               </span>
             )}
           </div>
+          <nav
+            aria-label="Breadcrumb"
+            className="ml-auto flex items-center gap-2.5 shrink-0"
+          >
+            <span className="font-mono text-accent2 text-lg sm:text-xl leading-none">
+              {stock.ticker}
+            </span>
+            <span className="text-muted/40 text-sm">/</span>
+            <Link
+              to={`/sector/${encodeURIComponent(stock.sector)}`}
+              className="text-xs sm:text-sm tracking-[0.12em] uppercase px-2.5 py-1 bg-panel2 border border-border text-muted hover:text-accent2 hover:border-accent2"
+            >
+              {stock.sector}
+            </Link>
+            <span className="text-muted/40 text-sm">/</span>
+            <Link
+              to="/"
+              aria-label="Home"
+              title="Home"
+              className="text-muted hover:text-accent2 inline-flex items-center p-1"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                width="22"
+                height="22"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M3 11l9-8 9 8" />
+                <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-7h4v7h4a1 1 0 0 0 1-1V9.5" />
+              </svg>
+            </Link>
+          </nav>
         </div>
         {unknown && (
           <div className="mt-2 text-xs text-accent2">
@@ -239,7 +305,7 @@ export default function Stock() {
       </header>
 
       {showMarketChart && (
-        <section className="bg-panel border border-border p-3 sm:p-4">
+        <section ref={chartSectionRef} className="bg-panel border border-border p-3 sm:p-4">
           <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
             <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted">
               Market chart · with transactions
@@ -545,6 +611,67 @@ export default function Stock() {
           </p>
         </section>
       )}
+
+      {showMarketChart &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            aria-hidden={!stickyBarVisible}
+            className={`fixed left-0 right-0 z-10 transition-transform duration-200 bg-panel border-b border-border ${
+              stickyBarVisible ? "translate-y-0" : "-translate-y-full pointer-events-none"
+            }`}
+            style={{ top: `${headerHeight}px` }}
+          >
+            <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-2 flex items-center gap-3">
+              <CompanyLogo
+                ticker={stock.ticker}
+                alt=""
+                className="w-8 h-8 sm:w-9 sm:h-9 object-contain bg-bg rounded-sm border border-border p-0.5 shrink-0"
+              />
+              <h2 className="font-serif text-lg sm:text-xl text-ink truncate min-w-0">
+                {stock.name}
+              </h2>
+              <nav
+                aria-label="Breadcrumb"
+                className="ml-auto flex items-center gap-2.5 shrink-0"
+              >
+                <span className="font-mono text-accent2 text-base sm:text-lg leading-none">
+                  {stock.ticker}
+                </span>
+                <span className="text-muted/40 text-sm">/</span>
+                <Link
+                  to={`/sector/${encodeURIComponent(stock.sector)}`}
+                  className="text-xs sm:text-sm tracking-[0.12em] uppercase px-2.5 py-1 bg-panel2 border border-border text-muted hover:text-accent2 hover:border-accent2"
+                >
+                  {stock.sector}
+                </Link>
+                <span className="text-muted/40 text-sm">/</span>
+                <Link
+                  to="/"
+                  aria-label="Home"
+                  title="Home"
+                  className="text-muted hover:text-accent2 inline-flex items-center p-1"
+                >
+                  <svg
+                    viewBox="0 0 24 24"
+                    width="22"
+                    height="22"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M3 11l9-8 9 8" />
+                    <path d="M5 9.5V20a1 1 0 0 0 1 1h4v-7h4v7h4a1 1 0 0 0 1-1V9.5" />
+                  </svg>
+                </Link>
+              </nav>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   );
 }
