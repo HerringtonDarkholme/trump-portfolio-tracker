@@ -30,6 +30,37 @@ export type Sector = {
   tickers: string[];
 };
 
+export type PortfolioYieldStock = {
+  estPnL: number;
+  estHoldingValue: number;
+  counted: number;
+};
+
+export type PortfolioYieldSnapshot = {
+  date: string;
+  estCost: number;
+  estProceeds: number;
+  estHoldingValue: number;
+  estPnL: number;
+  maxPnL: number;
+  minPnL: number;
+  denomBase: number;
+  estYieldPct: number;
+  maxYieldPct: number;
+  minYieldPct: number;
+  tickersCounted: number;
+  tickersSkipped: number;
+  txCounted: number;
+  txSkipped: number;
+  txExcludedFuture: number;
+  stocks: Record<string, PortfolioYieldStock>;
+};
+
+export type PortfolioYield = {
+  generatedAt: string;
+  snapshots: PortfolioYieldSnapshot[];
+};
+
 export type Dataset = {
   generatedAt: string;
   totals: {

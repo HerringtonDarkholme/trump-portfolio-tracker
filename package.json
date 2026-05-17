@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build:data": "node scripts/build-dataset.mjs",
-    "fetch:prices": "node scripts/fetch-prices.mjs",
+    "build:portfolio-yield": "node scripts/build-portfolio-yield.mjs",
+    "fetch:prices": "node scripts/fetch-prices.mjs && node scripts/build-portfolio-yield.mjs",
     "fetch:logos": "node scripts/fetch-logos.mjs",
     "predev": "node scripts/build-dataset.mjs",
     "prebuild": "node scripts/build-dataset.mjs",

@@ -103,7 +103,7 @@ export default function SectorHeatmap({
             Sector Heatmap
           </h2>
           <div className="text-[11px] sm:text-xs tracking-[0.1em] uppercase text-muted mt-1">
-            {visibleStocks} stocks · {visibleSectors} sectors · cell = volume · color = net
+            {visibleStocks} stocks · {visibleSectors} sectors · cell = volume · color = net B/S
           </div>
         </div>
         <div className="flex items-center gap-2 sm:gap-3 text-xs w-full sm:w-auto">

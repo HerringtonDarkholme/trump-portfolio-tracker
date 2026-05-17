@@ -3,6 +3,7 @@ import { KpiInt, KpiDollar } from "../components/Kpi";
 import SectorHeatmap from "../components/SectorHeatmap";
 import Leaderboard from "../components/Leaderboard";
 import DailyActivityChart from "../components/DailyActivityChart";
+import PortfolioYield from "../components/PortfolioYield";
 
 const SOURCE_PDF_URL =
   "https://extapps2.oge.gov/201/Presiden.nsf/PAS+Index/405E4EC4E27BE8D185258DF7002DD1C0/$FILE/Trump%2C%20Donald%20J.-05.08.2026-278T(2).pdf";
@@ -57,6 +58,7 @@ export default function Home() {
 
       <SectorHeatmap />
       <Leaderboard />
+      <PortfolioYield />
     </div>
   );
 }
