@@ -11,10 +11,25 @@ import { KpiInt, KpiDollar, KpiPct, KpiNum } from "../components/Kpi";
 type SortKey = "n" | "date" | "type" | "amount" | "mid";
 type Candle = { time: string; open: number; high: number; low: number; close: number };
 
-// The most recent batch of Trump's 278-T filings was publicly released on
-// 2026-05-14, so that's the natural snapshot date for yield calculations:
-// every transaction in the dataset is known and disclosed as of that day.
-const SNAPSHOT_DATE = "2026-05-14";
+// Yield can be marked at one of two natural reference points:
+//   - 2026-05-14: the public-release date of the most recent 278-T batch
+//                 (the canonical "you've just learned about every trade" view).
+//   - 2026-03-31: Q1 close — useful for measuring how the trades had performed
+//                 by the quarter boundary, before the filings became public.
+type SnapshotOption = { date: string; label: string; blurb: string };
+const SNAPSHOT_OPTIONS: SnapshotOption[] = [
+  {
+    date: "2026-05-14",
+    label: "Disclosure",
+    blurb: "Date the most recent 278-T filing batch was publicly released.",
+  },
+  {
+    date: "2026-03-31",
+    label: "Q1 end",
+    blurb: "Calendar Q1 2026 close — quarter-end mark.",
+  },
+];
+const DEFAULT_SNAPSHOT_DATE = SNAPSHOT_OPTIONS[0].date;
 
 function yieldColor(v: number): "buy" | "sell" | undefined {
   if (v > 0) return "buy";
@@ -29,6 +44,7 @@ export default function Stock() {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
   const [priceMap, setPriceMap] = useState<Map<string, Candle> | null>(null);
+  const [snapshotPick, setSnapshotPick] = useState<string>(DEFAULT_SNAPSHOT_DATE);
 
   // Sticky condensed bar appears once the market-chart section (and the
   // company logo it carries) scrolls behind the site header.
@@ -125,13 +141,17 @@ export default function Stock() {
   // extreme.
   const yieldEstimate = useMemo(() => {
     if (!stock || !priceMap || priceMap.size === 0) return null;
-    // Anchor to SNAPSHOT_DATE (filing-release date). If the market was closed
-    // that day, walk back to the nearest prior trading day we have data for.
-    let snapshotDate = SNAPSHOT_DATE;
-    let snapshotClose = priceMap.get(snapshotDate)?.close ?? 0;
-    if (!snapshotClose) {
+    // Anchor to the user-picked snapshot. If the market was closed that day
+    // (weekend / holiday), walk back to the nearest prior trading day we have
+    // data for.
+    const target = snapshotPick;
+    let snapshotDate = "";
+    let snapshotClose = priceMap.get(target)?.close ?? 0;
+    if (snapshotClose) {
+      snapshotDate = target;
+    } else {
       for (const [date, c] of priceMap.entries()) {
-        if (date <= SNAPSHOT_DATE && date > snapshotDate) {
+        if (date <= target && date > snapshotDate) {
           snapshotDate = date;
           snapshotClose = c.close;
         }
@@ -147,8 +167,16 @@ export default function Stock() {
     let minPnL = 0;
     let counted = 0;
     let skipped = 0;
+    let excludedFuture = 0;
 
     for (const t of stock.transactions) {
+      // Transactions after the snapshot haven't happened yet from this
+      // vantage point — exclude them entirely (no contribution, no skipped
+      // warning).
+      if (t.date > snapshotDate) {
+        excludedFuture++;
+        continue;
+      }
       const c = priceMap.get(t.date);
       if (!c?.close) {
         skipped++;
@@ -208,8 +236,9 @@ export default function Stock() {
       snapshotClose,
       counted,
       skipped,
+      excludedFuture,
     };
-  }, [stock, priceMap]);
+  }, [stock, priceMap, snapshotPick]);
 
   if (!stock) {
     return (
@@ -419,18 +448,21 @@ export default function Stock() {
       {yieldEstimate && (
         <section className="bg-panel border border-border p-3 sm:p-4">
           <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
-            <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted">
-              Estimated yield
-              <span className="ml-2 text-muted/70 normal-case tracking-normal font-normal">
-                · as of{" "}
-                <span className="font-mono text-ink">{yieldEstimate.snapshotDate}</span>
-              </span>
+            <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted inline-flex items-baseline gap-2 flex-wrap">
+              <span>Estimated yield</span>
+              <span className="text-muted/70 normal-case tracking-normal font-normal">· as of</span>
+              <SnapshotSelect value={snapshotPick} onChange={setSnapshotPick} />
             </h2>
-            {yieldEstimate.skipped > 0 && (
-              <span className="text-[11px] text-muted">
-                {yieldEstimate.skipped} tx skipped — no price data
-              </span>
-            )}
+            <div className="flex items-baseline gap-3 flex-wrap text-[11px] text-muted">
+              {yieldEstimate.excludedFuture > 0 && (
+                <span>
+                  {yieldEstimate.excludedFuture} tx after snapshot — excluded
+                </span>
+              )}
+              {yieldEstimate.skipped > 0 && (
+                <span>{yieldEstimate.skipped} tx skipped — no price data</span>
+              )}
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
@@ -599,15 +631,18 @@ export default function Stock() {
 
           <p className="mt-3 text-[11px] text-muted leading-relaxed">
             <strong className="text-ink">Anchored to {yieldEstimate.snapshotDate}.</strong>{" "}
-            Trump's most recent 278-T filing batch was publicly released on{" "}
-            <span className="font-mono">2026-05-14</span>, so holdings are
-            marked at that day's close — every transaction in the dataset is
-            known and disclosed as of then. Yield % is divided by{" "}
-            <span className="font-mono">max(cost, proceeds)</span> — whichever
-            side saw more dollar flow — so net-seller positions don't get an
-            artificially inflated ratio. Best/worst pick each transaction's
-            actual amount at the extreme of its disclosed range that maximises
-            or minimises the per-transaction P&amp;L contribution.
+            Pick a snapshot date above:{" "}
+            <span className="font-mono">2026-05-14</span> is the public release
+            date for Trump's most recent 278-T filing batch;{" "}
+            <span className="font-mono">2026-03-31</span> is the Q1 calendar
+            close. Transactions dated after the chosen snapshot are excluded —
+            they hadn't happened yet from that vantage point. Yield % is
+            divided by <span className="font-mono">max(cost, proceeds)</span> —
+            whichever side saw more dollar flow — so net-seller positions don't
+            get an artificially inflated ratio. Best/worst pick each
+            transaction's actual amount at the extreme of its disclosed range
+            that maximises or minimises the per-transaction P&amp;L
+            contribution.
           </p>
         </section>
       )}
@@ -720,6 +755,98 @@ function PriceCell({ candle }: { candle: Candle | null }) {
           <span className="text-right">{candle.close.toFixed(2)}</span>
         </div>
       </span>
+    </span>
+  );
+}
+
+function SnapshotSelect({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const selected = SNAPSHOT_OPTIONS.find((o) => o.date === value) ?? SNAPSHOT_OPTIONS[0];
+
+  useEffect(() => {
+    if (!open) return;
+    function onDocClick(e: MouseEvent) {
+      if (!ref.current?.contains(e.target as Node)) setOpen(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onDocClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDocClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  return (
+    <span ref={ref} className="relative inline-block normal-case tracking-normal font-normal">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="inline-flex items-center gap-1.5 bg-panel2 border border-border hover:border-accent2 text-ink px-2 py-1 leading-none text-[11px] sm:text-xs transition-colors"
+      >
+        <span className="font-mono">{selected.date}</span>
+        <span className="text-muted">·</span>
+        <span>{selected.label}</span>
+        <svg
+          viewBox="0 0 12 12"
+          width="10"
+          height="10"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          className={"text-muted transition-transform " + (open ? "rotate-180" : "")}
+          aria-hidden="true"
+        >
+          <path d="M3 5l3 3 3-3" />
+        </svg>
+      </button>
+      {open && (
+        <ul
+          role="listbox"
+          className="absolute left-0 top-full mt-1 z-30 min-w-[16rem] bg-panel border border-ink shadow-lg py-1"
+        >
+          {SNAPSHOT_OPTIONS.map((opt) => {
+            const active = opt.date === value;
+            return (
+              <li key={opt.date}>
+                <button
+                  type="button"
+                  role="option"
+                  aria-selected={active}
+                  onClick={() => {
+                    onChange(opt.date);
+                    setOpen(false);
+                  }}
+                  className={
+                    "w-full text-left px-3 py-2 text-xs hover:bg-panel2 flex flex-col gap-0.5 " +
+                    (active ? "bg-panel2" : "")
+                  }
+                >
+                  <span className="flex items-baseline gap-2">
+                    <span className="font-mono text-ink">{opt.date}</span>
+                    <span className="text-ink">{opt.label}</span>
+                    {active && <span className="ml-auto text-accent2 text-[10px]">✓</span>}
+                  </span>
+                  <span className="text-[10px] text-muted leading-snug">{opt.blurb}</span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </span>
   );
 }
