@@ -1,14 +1,25 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { dataset } from "../lib/dataset";
-import { fmt$ } from "../lib/format";
+import { fmt$, fmtSigned$ } from "../lib/format";
 import StockMonthlyChart from "../components/StockMonthlyChart";
 import MarketChart, { MarketChartLegend } from "../components/MarketChart";
 import CompanyLogo from "../components/CompanyLogo";
-import { KpiInt, KpiDollar } from "../components/Kpi";
+import { KpiInt, KpiDollar, KpiPct, KpiNum } from "../components/Kpi";
 
 type SortKey = "n" | "date" | "type" | "amount" | "mid";
 type Candle = { time: string; open: number; high: number; low: number; close: number };
+
+// The most recent batch of Trump's 278-T filings was publicly released on
+// 2026-05-14, so that's the natural snapshot date for yield calculations:
+// every transaction in the dataset is known and disclosed as of that day.
+const SNAPSHOT_DATE = "2026-05-14";
+
+function yieldColor(v: number): "buy" | "sell" | undefined {
+  if (v > 0) return "buy";
+  if (v < 0) return "sell";
+  return undefined;
+}
 
 export default function Stock() {
   const { ticker = "" } = useParams();
@@ -55,6 +66,104 @@ export default function Stock() {
     });
     return arr;
   }, [stock, sortKey, sortDir]);
+
+  // Estimated yield using per-transaction close prices. Total P&L decomposes
+  // into a sum of independent per-transaction terms that are LINEAR in the
+  // disclosed amount, so max/min over each transaction's [low, high] range
+  // resolves greedily — no DP needed.
+  //
+  //   Purchase contribution = a × (p_final / p_buy − 1)
+  //   Sale contribution     = a × (1 − p_final / p_sell)
+  //
+  // Sign of the coefficient picks whether to use `high` or `low` at each
+  // extreme.
+  const yieldEstimate = useMemo(() => {
+    if (!stock || !priceMap || priceMap.size === 0) return null;
+    // Anchor to SNAPSHOT_DATE (filing-release date). If the market was closed
+    // that day, walk back to the nearest prior trading day we have data for.
+    let snapshotDate = SNAPSHOT_DATE;
+    let snapshotClose = priceMap.get(snapshotDate)?.close ?? 0;
+    if (!snapshotClose) {
+      for (const [date, c] of priceMap.entries()) {
+        if (date <= SNAPSHOT_DATE && date > snapshotDate) {
+          snapshotDate = date;
+          snapshotClose = c.close;
+        }
+      }
+    }
+    if (!snapshotClose) return null;
+
+    let estCost = 0;
+    let estProceeds = 0;
+    let estSharesHeld = 0;
+    let estPnL = 0;
+    let maxPnL = 0;
+    let minPnL = 0;
+    let counted = 0;
+    let skipped = 0;
+
+    for (const t of stock.transactions) {
+      const c = priceMap.get(t.date);
+      if (!c?.close) {
+        skipped++;
+        continue;
+      }
+      const p = c.close;
+      if (t.type === "purchase") {
+        estCost += t.mid;
+        estSharesHeld += t.mid / p;
+        const coef = snapshotClose / p - 1;
+        estPnL += t.mid * coef;
+        if (coef >= 0) {
+          maxPnL += t.high * coef;
+          minPnL += t.low * coef;
+        } else {
+          maxPnL += t.low * coef;
+          minPnL += t.high * coef;
+        }
+      } else {
+        estProceeds += t.mid;
+        estSharesHeld -= t.mid / p;
+        const coef = 1 - snapshotClose / p;
+        estPnL += t.mid * coef;
+        if (coef >= 0) {
+          maxPnL += t.high * coef;
+          minPnL += t.low * coef;
+        } else {
+          maxPnL += t.low * coef;
+          minPnL += t.high * coef;
+        }
+      }
+      counted++;
+    }
+
+    if (counted === 0) return null;
+    const estHoldingValue = estSharesHeld * snapshotClose;
+    // Use the LARGER of cost-basis or proceeds as the yield denominator. For
+    // net buyers this is cost (capital deployed); for net sellers it's
+    // proceeds (capital realised). Either way it reflects the magnitude of
+    // dollar flow on the dominant side rather than artificially inflating
+    // yield when only a small position was ever bought.
+    const denomBase = Math.max(estCost, estProceeds);
+    const denom = denomBase > 0 ? denomBase : 1;
+    return {
+      estCost,
+      estProceeds,
+      estSharesHeld,
+      estHoldingValue,
+      estPnL,
+      estYieldPct: (estPnL / denom) * 100,
+      maxPnL,
+      maxYieldPct: (maxPnL / denom) * 100,
+      minPnL,
+      minYieldPct: (minPnL / denom) * 100,
+      denomBase,
+      snapshotDate,
+      snapshotClose,
+      counted,
+      skipped,
+    };
+  }, [stock, priceMap]);
 
   if (!stock) {
     return (
@@ -240,7 +349,223 @@ export default function Stock() {
           </table>
         </div>
       </section>
+
+      {yieldEstimate && (
+        <section className="bg-panel border border-border p-3 sm:p-4">
+          <div className="flex items-baseline justify-between gap-3 flex-wrap mb-3">
+            <h2 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-muted">
+              Estimated yield
+              <span className="ml-2 text-muted/70 normal-case tracking-normal font-normal">
+                · as of{" "}
+                <span className="font-mono text-ink">{yieldEstimate.snapshotDate}</span>
+              </span>
+            </h2>
+            {yieldEstimate.skipped > 0 && (
+              <span className="text-[11px] text-muted">
+                {yieldEstimate.skipped} tx skipped — no price data
+              </span>
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 sm:gap-3">
+            <KpiDollar
+              variant="md"
+              label="Est. cost"
+              value={yieldEstimate.estCost}
+              info={
+                <CalcInfo
+                  title="Estimated cost basis"
+                  body={<>Sum of midpoint dollar amounts across all <span className="text-buy">purchase</span> transactions in the dataset.</>}
+                  formula="Σ buy.mid"
+                />
+              }
+            />
+            <KpiDollar
+              variant="md"
+              label="Est. proceeds"
+              value={yieldEstimate.estProceeds}
+              info={
+                <CalcInfo
+                  title="Estimated proceeds"
+                  body={<>Sum of midpoint dollar amounts across all <span className="text-sell">sale</span> transactions.</>}
+                  formula="Σ sell.mid"
+                />
+              }
+            />
+            <KpiNum
+              variant="md"
+              label="Est. shares held"
+              value={yieldEstimate.estSharesHeld}
+              frac={2}
+              info={
+                <CalcInfo
+                  title="Estimated shares held"
+                  body={
+                    <>
+                      For each transaction we estimate the implied share count
+                      by dividing the midpoint dollar amount by that day's
+                      close price. Buys add, sells subtract.
+                      <div className="mt-1.5 text-ink">
+                        Negative values aren't a short position — they mean
+                        the holder already owned shares before our dataset
+                        starts and is disposing of that pre-existing position.
+                      </div>
+                    </>
+                  }
+                  formula={
+                    <>
+                      <div>Σ (buy.mid ÷ close_t)</div>
+                      <div>  − Σ (sell.mid ÷ close_t)</div>
+                    </>
+                  }
+                />
+              }
+            />
+            <KpiDollar
+              variant="md"
+              label="Mark-to-market"
+              value={yieldEstimate.estHoldingValue}
+              sub={`@ $${yieldEstimate.snapshotClose.toFixed(2)}`}
+              subInline
+              info={
+                <CalcInfo
+                  title="Mark-to-market value"
+                  body={
+                    <>
+                      Estimated net shares valued at the snapshot close on{" "}
+                      <span className="font-mono">{yieldEstimate.snapshotDate}</span>.
+                      <div className="mt-1.5 text-ink">
+                        A negative value means the dataset shows more dollars
+                        sold than bought — i.e. a pre-existing position
+                        (held before our data window) is being disposed of.
+                        It's not an actual short.
+                      </div>
+                    </>
+                  }
+                  formula={`shares × $${yieldEstimate.snapshotClose.toFixed(2)}`}
+                />
+              }
+            />
+            <KpiDollar
+              variant="md"
+              label="Est. P&L"
+              value={yieldEstimate.estPnL}
+              signed
+              color={yieldEstimate.estPnL >= 0 ? "buy" : "sell"}
+              info={
+                <CalcInfo
+                  title="Estimated P&L"
+                  body={<>Sum of per-transaction profit/loss using midpoint amounts. Each contribution is the change in value between trade date and snapshot date <span className="font-mono">{yieldEstimate.snapshotDate}</span>.</>}
+                  formula={
+                    <>
+                      <div>buy:&nbsp;&nbsp;a × (close_s ÷ close_t − 1)</div>
+                      <div>sell: a × (1 − close_s ÷ close_t)</div>
+                      <div className="mt-1 text-muted">a = transaction midpoint</div>
+                    </>
+                  }
+                />
+              }
+            />
+          </div>
+
+          <div className="mt-4 pt-3 border-t border-border grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3">
+            <KpiPct
+              variant="md"
+              label="Est. yield"
+              value={yieldEstimate.estYieldPct}
+              signed
+              color={yieldColor(yieldEstimate.estYieldPct)}
+              sub={fmtSigned$(yieldEstimate.estPnL)}
+              subInline
+              info={
+                <CalcInfo
+                  title="Estimated yield"
+                  body="P&L expressed as a percentage of the larger of cost basis or proceeds — whichever side saw more dollar flow. Avoids inflating yield when only a small position was ever bought (net-sell case)."
+                  formula="(P&L ÷ max(cost, proceeds)) × 100%"
+                />
+              }
+            />
+            <KpiPct
+              variant="md"
+              label="Best-case yield"
+              value={yieldEstimate.maxYieldPct}
+              signed
+              color={yieldColor(yieldEstimate.maxYieldPct)}
+              sub={fmtSigned$(yieldEstimate.maxPnL)}
+              subInline
+              info={
+                <CalcInfo
+                  title="Best-case yield"
+                  body="For every transaction, pick the dollar amount within its disclosed range [low, high] that MAXIMISES its P&L contribution."
+                  formula={
+                    <>
+                      <div>per-tx pick:</div>
+                      <div>&nbsp;&nbsp;a = high if coef ≥ 0 else low</div>
+                      <div className="mt-1">yield = (Σ a·coef ÷ max(cost, proceeds)) × 100%</div>
+                    </>
+                  }
+                />
+              }
+            />
+            <KpiPct
+              variant="md"
+              label="Worst-case yield"
+              value={yieldEstimate.minYieldPct}
+              signed
+              color={yieldColor(yieldEstimate.minYieldPct)}
+              sub={fmtSigned$(yieldEstimate.minPnL)}
+              subInline
+              info={
+                <CalcInfo
+                  title="Worst-case yield"
+                  body="Same as best-case but pick the amount in each range that MINIMISES the P&L contribution."
+                  formula={
+                    <>
+                      <div>per-tx pick:</div>
+                      <div>&nbsp;&nbsp;a = low if coef ≥ 0 else high</div>
+                      <div className="mt-1">yield = (Σ a·coef ÷ max(cost, proceeds)) × 100%</div>
+                    </>
+                  }
+                />
+              }
+            />
+          </div>
+
+          <p className="mt-3 text-[11px] text-muted leading-relaxed">
+            <strong className="text-ink">Anchored to {yieldEstimate.snapshotDate}.</strong>{" "}
+            Trump's most recent 278-T filing batch was publicly released on{" "}
+            <span className="font-mono">2026-05-14</span>, so holdings are
+            marked at that day's close — every transaction in the dataset is
+            known and disclosed as of then. Yield % is divided by{" "}
+            <span className="font-mono">max(cost, proceeds)</span> — whichever
+            side saw more dollar flow — so net-seller positions don't get an
+            artificially inflated ratio. Best/worst pick each transaction's
+            actual amount at the extreme of its disclosed range that maximises
+            or minimises the per-transaction P&amp;L contribution.
+          </p>
+        </section>
+      )}
     </div>
+  );
+}
+
+function CalcInfo({
+  title,
+  body,
+  formula,
+}: {
+  title: string;
+  body: React.ReactNode;
+  formula: React.ReactNode;
+}) {
+  return (
+    <>
+      <div className="font-semibold mb-1 text-ink">{title}</div>
+      <div className="text-muted leading-relaxed">{body}</div>
+      <div className="mt-2 font-mono text-[10px] bg-panel2 border border-border px-2 py-1.5 leading-relaxed text-ink whitespace-pre-wrap break-words">
+        {formula}
+      </div>
+    </>
   );
 }
 

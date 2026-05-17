@@ -19,14 +19,20 @@ type Color = "buy" | "sell" | undefined;
 function Card({
   label,
   sub,
+  subInline = false,
   color,
   variant = "lg",
+  info,
   children,
 }: {
   label: string;
   sub?: string;
+  // When true, render `sub` on the same baseline as the main value rather
+  // than below it (smaller, muted).
+  subInline?: boolean;
   color?: Color;
   variant?: Variant;
+  info?: React.ReactNode;
   children: React.ReactNode;
 }) {
   const valueText =
@@ -38,15 +44,46 @@ function Card({
   const color$ =
     color === "buy" ? "text-buy" : color === "sell" ? "text-sell" : "text-ink";
   return (
-    <div className={`bg-panel border border-border ${padding} relative min-w-0`}>
+    <div className={`bg-panel border border-border ${padding} relative min-w-0 hover:z-30 focus-within:z-30`}>
       <div className={`absolute top-0 left-0 ${stripeW} h-0.5 bg-accent`} />
-      <div className="text-[11px] font-medium uppercase tracking-[0.16em] sm:tracking-[0.18em] text-muted truncate">
+      {info && (
+        <span
+          className="absolute top-1.5 right-1.5 z-10 group inline-flex items-center"
+          tabIndex={0}
+        >
+          <span
+            aria-label="How this is calculated"
+            className="w-4 h-4 rounded-full border border-border bg-bg text-muted group-hover:text-ink group-hover:border-ink group-focus-within:text-ink group-focus-within:border-ink flex items-center justify-center text-[9px] font-serif italic cursor-help"
+          >
+            i
+          </span>
+          <span
+            role="tooltip"
+            className="hidden group-hover:block group-focus-within:block absolute top-full right-0 mt-1 w-64 bg-panel border border-ink shadow-lg p-3 text-[11px] leading-relaxed text-ink whitespace-normal normal-case tracking-normal z-30 pointer-events-none"
+          >
+            {info}
+          </span>
+        </span>
+      )}
+      <div className={`text-[11px] font-medium uppercase tracking-[0.16em] sm:tracking-[0.18em] text-muted truncate ${info ? "pr-5" : ""}`}>
         {label}
       </div>
-      <div className={`mt-1.5 sm:mt-2 ${valueText} font-serif break-all leading-tight tabular-nums ${color$}`}>
-        {children}
+      <div
+        className={
+          `mt-1.5 sm:mt-2 ${valueText} font-serif leading-tight tabular-nums ${color$} ` +
+          (subInline && sub
+            ? "flex items-baseline gap-2 flex-wrap min-w-0"
+            : "break-all")
+        }
+      >
+        <span className={subInline ? "min-w-0 break-all" : ""}>{children}</span>
+        {subInline && sub && (
+          <span className="font-sans font-normal normal-case tracking-normal text-xs sm:text-sm text-muted">
+            {sub}
+          </span>
+        )}
       </div>
-      {sub && (
+      {!subInline && sub && (
         <div className="text-[11px] tracking-[0.1em] uppercase text-muted mt-1 sm:mt-1.5 truncate">
           {sub}
         </div>
@@ -60,16 +97,86 @@ export function KpiInt({
   value,
   sub,
   variant,
+  info,
 }: {
   label: string;
   value: number;
   sub?: string;
   variant?: Variant;
+  info?: React.ReactNode;
 }) {
   const v = useRollIn(value);
   return (
-    <Card label={label} sub={sub} variant={variant}>
+    <Card label={label} sub={sub} variant={variant} info={info}>
       <NumberFlow value={v} transformTiming={TIMING} spinTiming={TIMING} />
+    </Card>
+  );
+}
+
+export function KpiPct({
+  label,
+  value,
+  sub,
+  subInline,
+  color,
+  signed = false,
+  variant,
+  info,
+}: {
+  label: string;
+  value: number; // percentage points (e.g. pass 12.3 for "12.3%")
+  sub?: string;
+  subInline?: boolean;
+  color?: Color;
+  signed?: boolean;
+  variant?: Variant;
+  info?: React.ReactNode;
+}) {
+  const v = useRollIn(value);
+  return (
+    <Card label={label} sub={sub} subInline={subInline} color={color} variant={variant} info={info}>
+      <NumberFlow
+        value={v}
+        suffix="%"
+        format={{
+          minimumFractionDigits: 1,
+          maximumFractionDigits: 1,
+          signDisplay: signed ? "exceptZero" : "auto",
+        }}
+        transformTiming={TIMING}
+        spinTiming={TIMING}
+      />
+    </Card>
+  );
+}
+
+export function KpiNum({
+  label,
+  value,
+  sub,
+  variant,
+  frac = 2,
+  info,
+}: {
+  label: string;
+  value: number;
+  sub?: string;
+  variant?: Variant;
+  frac?: number;
+  info?: React.ReactNode;
+}) {
+  const v = useRollIn(value);
+  return (
+    <Card label={label} sub={sub} variant={variant} info={info}>
+      <NumberFlow
+        value={v}
+        format={{
+          minimumFractionDigits: frac,
+          maximumFractionDigits: frac,
+        }}
+        transformTiming={TIMING}
+        spinTiming={TIMING}
+      />
     </Card>
   );
 }
@@ -78,21 +185,25 @@ export function KpiDollar({
   label,
   value,
   sub,
+  subInline,
   color,
   signed = false,
   variant,
+  info,
 }: {
   label: string;
   value: number;
   sub?: string;
+  subInline?: boolean;
   color?: Color;
   signed?: boolean;
   variant?: Variant;
+  info?: React.ReactNode;
 }) {
   const parts = split$(value, signed);
   const v = useRollIn(parts.value);
   return (
-    <Card label={label} sub={sub} color={color} variant={variant}>
+    <Card label={label} sub={sub} subInline={subInline} color={color} variant={variant} info={info}>
       <NumberFlow
         value={v}
         prefix="$"

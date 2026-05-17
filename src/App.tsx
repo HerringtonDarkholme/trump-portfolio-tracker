@@ -135,7 +135,7 @@ export default function App() {
           </div>
         </div>
       </header>
-      <main className="max-w-[1400px] mx-auto px-3 sm:px-6 py-4 sm:py-6 overflow-x-hidden">
+      <main className="max-w-[1400px] mx-auto px-3 sm:px-6 py-4 sm:py-6 overflow-x-clip">
         <AnimatedRoutes />
       </main>
       <footer className="border-t border-border mt-12 bg-panel2/40">
