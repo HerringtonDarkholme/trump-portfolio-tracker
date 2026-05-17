@@ -141,7 +141,17 @@ export default function App() {
       <footer className="border-t border-border mt-12 bg-panel2/40">
         <div className="max-w-[1400px] mx-auto px-4 sm:px-8 py-4 sm:py-5 text-[11px] tracking-[0.12em] uppercase text-muted flex items-center justify-between gap-3 flex-wrap">
           <span>Based on public OGE filings · Recreational project · Not financial advice</span>
-          <Link to="/sitemap" className="hover:text-accent2">Sitemap</Link>
+          <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+            <a
+              href="https://x.com/hd_nvim"
+              target="_blank"
+              rel="noreferrer"
+              className="hover:text-accent2"
+            >
+              Vibed by Herrington Darkholme
+            </a>
+            <Link to="/sitemap" className="hover:text-accent2">Sitemap</Link>
+          </div>
         </div>
       </footer>
     </div>
