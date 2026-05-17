@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { Analytics } from "@vercel/analytics/react";
 import Home from "./routes/Home";
 import Stock from "./routes/Stock";
 import Sector from "./routes/Sector";
@@ -154,6 +155,7 @@ export default function App() {
           </div>
         </div>
       </footer>
+      <Analytics />
     </div>
   );
 }
