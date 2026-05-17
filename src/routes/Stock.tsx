@@ -617,8 +617,10 @@ export default function Stock() {
         createPortal(
           <div
             aria-hidden={!stickyBarVisible}
-            className={`fixed left-0 right-0 z-10 transition-transform duration-200 bg-panel border-b border-border ${
-              stickyBarVisible ? "translate-y-0" : "-translate-y-full pointer-events-none"
+            className={`fixed left-0 right-0 z-10 transition-[transform,opacity,box-shadow] duration-300 ease-out bg-panel border-b border-border will-change-transform ${
+              stickyBarVisible
+                ? "translate-y-0 opacity-100 shadow-[0_6px_16px_-8px_rgba(0,0,0,0.25)]"
+                : "-translate-y-2 opacity-0 pointer-events-none shadow-none"
             }`}
             style={{ top: `${headerHeight}px` }}
           >
