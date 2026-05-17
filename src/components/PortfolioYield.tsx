@@ -199,10 +199,7 @@ export default function PortfolioYield() {
         <strong className="text-ink">Portfolio-wide.</strong> Every resolved
         ticker's transactions are marked at that stock's close on the chosen
         snapshot date and summed. Tickers without exchange-traded price data
-        (money-market funds, unresolved holdings) are excluded. Pre-computed
-        at build time, so this section loads instantly — re-run{" "}
-        <code className="font-mono text-ink">npm run build:portfolio-yield</code>{" "}
-        after refreshing prices.
+        (money-market funds, unresolved holdings) are excluded.
       </p>
     </section>
   );

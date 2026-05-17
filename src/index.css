@@ -26,6 +26,35 @@
   .badge-halo-pulse { animation: none; }
 }
 
+.logo-shine {
+  position: relative;
+  overflow: hidden;
+}
+.logo-shine::after {
+  content: "";
+  position: absolute;
+  inset: -20% auto -20% 0;
+  width: 42%;
+  transform: translateX(-160%) skewX(-18deg);
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(209, 179, 113, 0.34),
+    transparent
+  );
+  pointer-events: none;
+}
+.logo-shine:hover::after {
+  animation: logoShineSweep 0.85s ease-out;
+}
+@keyframes logoShineSweep {
+  from { transform: translateX(-160%) skewX(-18deg); }
+  to { transform: translateX(340%) skewX(-18deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-shine:hover::after { animation: none; }
+}
+
 @layer base {
   html, body, #root { height: 100%; }
   html {

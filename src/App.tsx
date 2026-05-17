@@ -122,10 +122,10 @@ export default function App() {
         <div className="max-w-[1400px] mx-auto px-3 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between gap-3 sm:gap-6">
           <Link
             to="/"
-            className="bg-ink text-bg px-3 sm:px-5 py-2 sm:py-2.5 hover:bg-accent2 transition-colors font-serif shrink-0"
+            className="logo-shine group text-ink px-0 sm:px-0 py-1 hover:text-accent2 transition-colors font-serif shrink-0"
           >
             <div className="text-lg sm:text-2xl tracking-[0.16em] sm:tracking-[0.18em] font-medium leading-none">TRUMP</div>
-            <div className="text-[10px] sm:text-[11px] tracking-[0.2em] sm:tracking-[0.22em] text-accent mt-0.5">PORTFOLIO DASHBOARD</div>
+            <div className="text-[10px] sm:text-[11px] tracking-[0.2em] sm:tracking-[0.22em] text-accent2 group-hover:text-ink transition-colors mt-0.5">PORTFOLIO DASHBOARD</div>
           </Link>
           <div className="flex items-center gap-3 sm:gap-6 min-w-0 flex-1 justify-end">
             <SiteSearch />
