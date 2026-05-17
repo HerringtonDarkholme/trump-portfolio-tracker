@@ -167,10 +167,7 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
                 <Line type="monotone" dataKey="sell" name="Sales"     stroke="#a52a2a" strokeWidth={1.8} dot={false} isAnimationActive animationDuration={1400} animationEasing="ease-out" animationBegin={120} />
               </>
             ) : (
-              <>
-                <Area type="monotone" dataKey="netRange" stroke="none" fill="rgba(209,179,113,0.22)" isAnimationActive animationDuration={1400} animationEasing="ease-out" activeDot={false} legendType="none" name="netRange" />
-                <Line type="monotone" dataKey="net"  name="Net" stroke="#a88a4d" strokeWidth={1.8} dot={false} isAnimationActive animationDuration={1400} animationEasing="ease-out" />
-              </>
+              <Line type="monotone" dataKey="net"  name="Net" stroke="#a88a4d" strokeWidth={1.8} dot={false} isAnimationActive animationDuration={1400} animationEasing="ease-out" />
             )}
 
             <Legend
@@ -241,10 +238,7 @@ export default function DailyActivityChart({ sector }: { sector?: string }) {
                     ) : (
                       txTotal > 0 ? (
                         <div style={{ color: row.net >= 0 ? "#2e7d32" : "#b71c1c" }}>
-                          Net: {row.net >= 0 ? "+" : "−"}{fmt$(Math.abs(row.net))}{" "}
-                          <span style={{ color: "#6b6b62" }}>
-                            (range {fmt$(row.netRange[0])} – {fmt$(row.netRange[1])})
-                          </span>
+                          Net: {row.net >= 0 ? "+" : "−"}{fmt$(Math.abs(row.net))}
                         </div>
                       ) : null
                     )}

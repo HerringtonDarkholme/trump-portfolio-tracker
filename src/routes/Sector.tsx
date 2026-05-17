@@ -142,7 +142,7 @@ export default function Sector() {
           Daily activity in {decoded}
         </h2>
         <div className="text-xs text-muted mb-3">
-          Purchases above zero, sales below. Error bars = disclosed dollar range per day.
+          Purchases above zero, sales below. Buy/sell bands = disclosed dollar range per day.
         </div>
         <DailyActivityChart sector={decoded} />
       </section>

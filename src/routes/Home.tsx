@@ -51,7 +51,7 @@ export default function Home() {
           Daily Activity
         </h2>
         <div className="text-[11px] sm:text-xs tracking-[0.1em] uppercase text-muted mb-3">
-          All holdings · purchases above zero · sales below · bands = disclosed range
+          All holdings · purchases above zero · sales below · buy/sell bands = disclosed range
         </div>
         <DailyActivityChart />
       </section>
